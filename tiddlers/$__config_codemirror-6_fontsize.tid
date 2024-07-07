@@ -1,0 +1,10 @@
+caption: {{$:/language/codemirror6/fontsize/caption}}
+caption-zh: {{$:/language/codemirror6/zh/fontsize/caption}}
+created: 20240706154416995
+description: {{$:/language/codemirror6/fontsize/description}}
+description-zh: {{$:/language/codemirror6/zh/fontsize/description}}
+modified: 20240706154417210
+settings-template: $:/plugins/oeyoews/tiddlywiki-codemirror-6/ui/templates/settings/input
+title: $:/config/codemirror-6/fontsize
+
+17px

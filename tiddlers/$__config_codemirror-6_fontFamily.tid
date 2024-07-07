@@ -1,0 +1,10 @@
+caption: {{$:/language/codemirror6/fontFamily/caption}}
+caption-zh: {{$:/language/codemirror6/zh/fontFamily/caption}}
+created: 20240706154420841
+description: {{$:/language/codemirror6/fontFamily/description}}
+description-zh: {{$:/language/codemirror6/zh/fontFamily/description}}
+modified: 20240706154428198
+settings-template: $:/plugins/oeyoews/tiddlywiki-codemirror-6/ui/templates/settings/input
+title: $:/config/codemirror-6/fontFamily
+
+终端更纱黑体 Nerd
