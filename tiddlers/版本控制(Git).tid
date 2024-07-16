@@ -1,0 +1,96 @@
+created: 20240714161444115
+creator: LittFlower
+modified: 20240716044907974
+modifier: LittFlower
+tags: 工作流 计算机教育中缺失的一课 课程笔记 Git
+title: 版本控制(Git)
+
+# Git 的优雅与丑陋
+
+Git 的命令行抽象接口很丑陋，以至于大多数时候只能死记硬背地使用它们，但是它的底层设计和思想确实十分优雅的。从数据模型到接口的一种“自底向上”方法更加易于学习。
+
+# Git 的数据模型
+
+## 快照
+
+git 通过“快照”来管理其历史记录。一个快照就是对当前需要 git 管理的根目录的一次记录。
+
+## 历史记录
+
+每一次提交 (commit) 就是一次快照。 
+
+对历史记录的建模实际上就是去关联快照，git 采取了 **有向无环图** 的形式。
+
+git 中的快照是不可改变的。（当然这并不是说其完全无法修改）
+
+## 细粒度数据模型
+
+前面介绍了“快照是一个对当前根目录的完全记录”，也就是说，一个可能的结构如图：
+
+```
+<root> (tree)
+|
++- foo (tree)
+|  |
+|  + bar.txt (blob, contents = "hello world")
+|
++- baz.txt (blob, contents = "git is wonderful")
+```
+
+
+这其中涉及到两个数据模型，`tree` 和 `blob`，以下用伪代码的方式给出他们和与之相关的概念的定义：
+
+```
+// 文件是一组数据
+type blob = array<bytes>
+
+// 一个包含文件或目录的目录
+type tree = map<string, tree | blob>
+
+// 每个提交都包含一个父辈，元数据和顶层树
+type commit = struct {
+    parent: array<commit>
+    author: string
+    message: string
+    snapshot: tree
+}
+
+```
+
+## 对象和内存寻址
+
+`type object = blob | tree | commit`
+
+git 在储存数据时，所有的对象都会基于 SHA-1 哈希寻址，也就是说，所有的对象在引用其他对象时，不会直接使用其对应的硬盘上的数据，而是以哈希值作为引用。
+
+例如，最开头例子里的 root tree 引用了 foo tree 和 baz.txt，所以它看上去应该是这样的：
+
+```
+100644 blob 4448adbf7ecd394f42ae135bbeed9676e894af85    baz.txt
+040000 tree c68d233a33c5c06e0340e4c224f0afca87c8ce87    foo
+```
+
+而 baz.txt 本身并没有引用任何数据，所以你直接 `git cat-file -p 4448...` 会直接得到其内容: `git is wonderful`。
+
+## 引用
+
+现在已经有一个基础的概念模型了，所有的快照都可以通过 SHA-1 哈希值标记。git 通过引用来进一步向提交（快照，commit）打标签。也就是说，引用是指向提交的指针。引用是可变的。
+
+```
+references = map<string, string>
+
+def update_reference(name, id):
+    references[name] = id
+
+def read_reference(name):
+    return references[name]
+
+def load_reference(name_or_id):
+    if name_or_id in references:
+        return load(references[name_or_id])
+    else:
+        return load(name_or_id)
+```
+
+## 仓库
+
