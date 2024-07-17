@@ -111,8 +111,25 @@ def load_reference(name_or_id):
 3. `git log --all --graph --decorate` 以有向无环图形式展示提交日志
 4. `git commit` 提交暂存区为快照（[[如何编写高质量的 commit 消息]]）
 5. `git checkout` 用于改变 `HEAD` 指向的引用，实际上会改变工作区的内容，不填参数默认同步回 `HEAD` 引用处快照，也可以用来切换分支
-6. `git diff $file` 将现有的 $file 与 HEAD 处比较，查看做了哪些修改，也可以查看给定两次提交之间的差异
-7. `git branch` 可以用来访问新分支，或者列出当前分支
-8. `git merge` 可以用来合并分支
+6. `git diff <file>` 将现有的 $file 与 HEAD 处比较，查看做了哪些修改，也可以查看给定两次提交之间的差异
+7. `git branch` 可以用来访问新分支，或者列出当前分支(`-vv`)
+8. `git merge` 可以用来合并分支，如果自动合并冲突，使用 `git mergetools` 手动处理，然后 `git merge --continue` 即可正常合并
 
+## 远程仓库
+
+本地仓库储存在是 .git 里。
+
+1. `git remote` 列出当前仓库所知的所有远程仓库
+   - `git remote add <repo_name> <url>` 即可添加远程仓库
+3. `git pull` 拉取远程至本地 == `git fetch <remote>` + `git merge`
+4. `git push <remote> <local branch>:<remote branch>`
+5. `git clone` 克隆远程仓库到本地
+
+## 杂项
+
+1. `git config` 配置 git
+2. `git clone --shallow` 获取最新的快照，速度更快
+3. `git add -p` 可以交互式地选择是否保留更改
+4. `git blame` 确定快照的细粒度修改的提交
+5. `git show` 查询指定提交的信息
 
