@@ -110,10 +110,21 @@ def load_reference(name_or_id):
 2. `git status` 查询 git 状态
 3. `git log --all --graph --decorate` 以有向无环图形式展示提交日志
 4. `git commit` 提交暂存区为快照（[[如何编写高质量的 commit 消息]]）
-5. `git checkout` 用于改变 `HEAD` 指向的引用，实际上会改变工作区的内容，不填参数默认同步回 `HEAD` 引用处快照，也可以用来切换分支
-6. `git diff <file>` 将现有的 $file 与 HEAD 处比较，查看做了哪些修改，也可以查看给定两次提交之间的差异
+5. `git checkout` 用于改变 `HEAD` 指向的引用位置，实际上会改变工作区的内容，不填参数默认同步回 `HEAD` 引用处快照，也可以用来切换分支
+6. `git diff <file>` 将现有的 file 与 HEAD 处比较，查看做了哪些修改，也可以查看给定两次提交之间的差异
 7. `git branch` 可以用来访问新分支，或者列出当前分支(`-vv`)
-8. `git merge` 可以用来合并分支，如果自动合并冲突，使用 `git mergetools` 手动处理，然后 `git merge --continue` 即可正常合并
+
+## 进阶操作
+
+
+1. `^` 和 `~<num>` 可以用作相对分支的标记，将 HEAD 移动到父提交
+2. `git merge` 可以用来合并分支，如果自动合并冲突，使用 `git mergetools` 手动处理，然后 `git merge --continue` 即可正常合并
+3. `git rebase` 变基操作，可以形成简洁的线性提交历史记录
+> `git rebase <a> <b>` 是变基操作，会把 b 分支的提交应用到 a 上，因此只适合个人分支使用，以免造成仓库历史记录混乱；而 `git merge <a> <b>` 会生成一个新提交，其包含 a b，从操作树上可以直观地看出差别
+
+4. `git reset` 可以撤销本地变更
+5. `git revert` 可以撤销远程变更，其会引入了一个新更改 —— 而这些更改刚好是用来撤销之前的更改的
+6. `git filter-branch` 清除提交记录
 
 ## 远程仓库
 
@@ -132,4 +143,11 @@ def load_reference(name_or_id):
 3. `git add -p` 可以交互式地选择是否保留更改
 4. `git blame` 确定快照的细粒度修改的提交
 5. `git show` 查询指定提交的信息
+6. `git stash` 将工作目录恢复到上次提交的地方，`git stash pop` 撤销；另外，这两个命令可以实现将 stash 储存的改动自由地选择提交到的分支
+7. `git bisect` 对历史进行二分查找
+8. `.gitignore` 可以指定忽略一些文件
+
+## 资源
+
+1. [learning Git game online](https://learngitbranching.js.org/?locale=zh_CN) 这个网站以游戏方式较为全面介绍了 Git 的多种使用方法
 
