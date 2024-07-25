@@ -122,9 +122,9 @@ def load_reference(name_or_id):
 3. `git rebase` 变基操作，可以形成简洁的线性提交历史记录
 > `git rebase <a> <b>` 是变基操作，会把 b 分支的提交应用到 a 上，因此只适合个人分支使用，以免造成仓库历史记录混乱；而 `git merge <a> <b>` 会生成一个新提交，其包含 a b，从操作树上可以直观地看出差别
 
-4. `git reset` 可以撤销本地变更
-5. `git revert` 可以撤销远程变更，其会引入了一个新更改 —— 而这些更改刚好是用来撤销之前的更改的
-6. `git filter-branch` 清除提交记录
+4. `git reset` 可以撤销本地变更，但是撤销不彻底，会留下 refile
+5. `git revert` 可以“撤销”远程变更，其会引入了一个新更改 —— 而这些更改刚好是用来撤销之前的更改的，其完全没有删除原有变更
+6. `git filter-branch` 彻底清除某一个提交记录，建议用 `git filter-repo`
 
 ## 远程仓库
 
