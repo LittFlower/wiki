@@ -1,0 +1,7 @@
+created: 20240902062155422
+creator: LittFlower
+modified: 20240902062155422
+modifier: LittFlower
+title: 调用位置（call-site）
+
+在程序设计中，函数或子程序的调用位置（call-site）是函数被调用（或通过动态调度被调用）的位置（代码行）。调用点是向函数传递零个或多个参数并接收零个或多个返回值的位置。
