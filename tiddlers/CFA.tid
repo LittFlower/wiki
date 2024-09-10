@@ -1,0 +1,22 @@
+created: 20240905114117790
+creator: LittFlower
+modified: 20240909113554621
+modifier: LittFlower
+tags: 二进制知识 Linux 异常处理
+title: CFA
+
+CFA (Canonical Frame Address): 通常指向当前栈帧的基址，用于在异常处理期间找到返回地址和局部变量。
+
+它的值是在执行（不是执行完）当前函数 (callee) 的 caller 的 call 指令时的 RSP 值, 例子如下：
+
+```x86asm
+caller:
+push arg1    -->    RSP = 0xFFF8
+push arg2    -->    RSP = 0xFFF0  (执行call指令时的RSP值在这
+call callee  -->    RSP = 0xFFE8
+ 
+callee:
+push rbp     -->    CFA = 0xFFF0
+
+```
+
