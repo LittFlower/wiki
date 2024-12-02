@@ -2,3 +2,6 @@
 2. [[如何计算结构体字节数]]
 3. [[pwntools gdb attach]]
 4. [[qemu pwn 调试]]
+5. [[gdb 带源码调试]]
+6. [[cyclic 的使用]]
+7. [[dbgsym 下载符号与 ld]]

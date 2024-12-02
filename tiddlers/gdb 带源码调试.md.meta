@@ -1,7 +1,7 @@
-created: 20241130041617545
+created: 20241130062757915
 creator: LittFlower
-modified: 20241130062748877
+modified: 20241130063116882
 modifier: LittFlower
 tags: 二进制漏洞利用技术 Linux Pwn
-title: qemu pwn 调试
+title: gdb 带源码调试
 type: text/markdown
