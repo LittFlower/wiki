@@ -5,3 +5,4 @@
 5. [[gdb 带源码调试]]
 6. [[cyclic 的使用]]
 7. [[dbgsym 下载符号与 ld]]
+8. [[ubuntu glibc 软件包命名规则]]
