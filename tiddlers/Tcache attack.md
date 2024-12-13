@@ -1,6 +1,6 @@
 ## 什么是 Tcache bin
 
-Tcache bin 是自 glibc 2.27 开始出现的，源码位置在 `/glibc-2.27/malloc/malloc.c`。
+Tcache bin 是自 glibc 2.26 开始出现的，源码位置在 `/glibc-2.26/malloc/malloc.c`。
 
 它的数据结构部分的定义在这里：
 
@@ -31,7 +31,11 @@ typedef struct tcache_perthread_struct
 主要有以下几个点：
 
 - TPS 里维护了两个数组，`counts[]` 和 `*entries[]`，它们的大小都是 64，即最多可以放下从 0x20 ~ 0x410 一共 64 种大小的 chunk。
-- `*entries[]` 里存放的是 chunk 的 fd 指针处的 addr，并且 chunk 的 fd 指针会被设置成下一个同大小的 free chunk（就是那个 *next），而 bk 指针会被设置成一个 key（glibc2.27_0ubuntu1_amd64 的 glibc 会把 bk 设置成 TPS_addr，再高一点的版本（2.27-3ubuntu1.5_amd64）都会设置成一个随机数），这个 key 可以用来校验 double free。
+- `*entries[]` 里存放的是 chunk 的 fd 指针处的 addr，并且 chunk 的 fd 指针会被设置成下一个同大小的 free chunk（就是那个 *next），而 bk 指针会被设置成一个 key（glibc2.27_0ubuntu1_amd64 及以下的 glibc 会把 bk 设置成 TPS_addr，再高一点的版本（2.27-3ubuntu1.5_amd64）都会设置成一个随机数），这个 key 可以用来校验 double free。
+
+在 Glibc 2.31 以下，TPS 的大小为 0x250 = (0x10 + 64 * 1 + 64 * 8)，0x10 是 header，1 字节是 `char count[idx]`，8 字节是 `*entry`。
+
+
 
 
 直接把相关部分的关键代码贴一下，具体来讲在 2923 ～ 3015 行：

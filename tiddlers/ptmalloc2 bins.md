@@ -1,7 +1,5 @@
 主要介绍一下 ptmalloc2 的各种 bins。
 
-
-
 首先讲一下常见的宏，`SIZE_SZ` 在 64 位下是 8 字节，在 32 位下是 4 字节。
 
 在 ./malloc/malloc-internal.h 里定义了 `SIZE_SZ` 和 `MALLOC_ALIGN_MASK`，如下：
@@ -36,7 +34,7 @@
    ((req) + SIZE_SZ + MALLOC_ALIGN_MASK) & ~MALLOC_ALIGN_MASK)
 ```
 
-上面这个宏可以把申请的 `req` 自动补全到字节对齐。
+上面这个宏可以把用户申请的 `req` 。
 
 
 
@@ -55,7 +53,7 @@
 #define NFASTBINS  (fastbin_index (request2size (MAX_FAST_SIZE)) + 1)
 ```
 
-那么口算一下这个 `NFASTBINS`，感觉等于 9（不管是 x86 还是 x86-64）。
+那么口算一下这个 `NFASTBINS`，感觉等于 10（不管是 x86 还是 x86-64），但其实实际大下来只有 8，即从 0x20 ~ 。
 
 ### chunk size 的公差
 
