@@ -35,7 +35,7 @@ typedef struct tcache_perthread_struct
 
 在 Glibc 2.31 以下，TPS 的大小为 0x250 = (0x10 + 64 * 1 + 64 * 8)，0x10 是 header，1 字节是 `char count[idx]`，8 字节是 `*entry`。
 
-
+这里可以打 TPS 结构体，做到任意大小、地址申请。
 
 
 直接把相关部分的关键代码贴一下，具体来讲在 2923 ～ 3015 行：
