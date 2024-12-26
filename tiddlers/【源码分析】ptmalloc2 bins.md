@@ -118,13 +118,64 @@ malloc_init_state (mstate av)
      SMALLBIN_CORRECTION)
 ```
 
-x64 下，这两行注释表明，smallbin 的个数最多是 64，公差为 0x10。但其实 smallbin 最多 62 个（这一点可以从 0x20 ~ MIN_LARGE_SIZE / 0x10 只有 62 个和 BINs[] 给 smallbin 的只有 62 个导出）
+x64 下，这两行注释表明，smallbin 的个数最多是 64，公差为 0x10。但其实 smallbin 最多 62 个（这一点可以从 $(MIN_LARGE_SIZE - 0x20) / 0x10$ 只有 62 个和 BINs[] 给 smallbin 的只有 62 个导出）
 
 
 ![](https://azeria-labs.com/wp-content/uploads/2019/05/bins-new.png)
 
 
 ## large bin
+
+由上图可以看到 large bin 的 index 范围是 64 ~ 126 一共 63 个 chunk
+
+根据上面的 small bin 宏中的 `MIN_LARGE_SIZE` 可以推出 x86-64 下最小的 Large Bins size 是 0x400。
+
+```c
+#define largebin_index(sz) \
+  (SIZE_SZ == 8 ? largebin_index_64 (sz)                                     \
+   : MALLOC_ALIGNMENT == 16 ? largebin_index_32_big (sz)                     \
+   : largebin_index_32 (sz))
+```
+
+在常见的 x86-64 环境下，`SIZE_SZ == 8` 这个条件基本上都是满足的，所以就是用 `largebin_index_64` 这个宏，看看这个：
+
+```c
+#define largebin_index_64(sz)                                                \
+  (((((unsigned long) (sz)) >> 6) <= 48) ?  48 + (((unsigned long) (sz)) >> 6) :\
+   ((((unsigned long) (sz)) >> 9) <= 20) ?  91 + (((unsigned long) (sz)) >> 9) :\
+   ((((unsigned long) (sz)) >> 12) <= 10) ? 110 + (((unsigned long) (sz)) >> 12) :\
+   ((((unsigned long) (sz)) >> 15) <= 4) ? 119 + (((unsigned long) (sz)) >> 15) :\
+   ((((unsigned long) (sz)) >> 18) <= 2) ? 124 + (((unsigned long) (sz)) >> 18) :\
+   126)
+```
+
+根据这个推一下，当 `sz = 0x400` 时，`sz >> 6 = 16` 故起始 index 确确实实是 64，根据这个宏可以推出 x86-64 下的 largebin 的取值范围情况，它将 bin 分为 6 组，每个组内的 chunk 大小的公差一致。
+
+简单说一下这里怎么调试，main_arena 作为 libc.so.6 的全局静态变量，可以在 gdb 里直接查看 bins 数组，然后可以查看当前的 largebin 在 bins 里的 index。
+
+总之你可以看出来，就算在同一个 largebin index 中，其 chunk 大小也有差别，这和 fastbin 是不一样的。
+
+```c
+/*
+  This struct declaration is misleading (but accurate and necessary).
+  It declares a "view" into memory allowing access to necessary
+  fields at known offsets from a given base. See explanation below.
+*/
+struct malloc_chunk {
+  INTERNAL_SIZE_T      prev_size;  /* Size of previous chunk (if free).  */
+  INTERNAL_SIZE_T      size;       /* Size in bytes, including overhead. */
+  struct malloc_chunk* fd;         /* double links -- used only if free. */
+  struct malloc_chunk* bk;
+  /* Only used for large blocks: pointer to next larger size.  */
+  struct malloc_chunk* fd_nextsize; /* double links -- used only if free. */
+  struct malloc_chunk* bk_nextsize;
+};
+```
+
+所以堆管理器就利用这个结构中的 fd_nextsize 和 bk_nextsize 来链接到下一个 size 的堆块头部和上一个 size 的堆块头部。然后在相同 size 的堆块内部再通过 fd 和 bk 来进行内部的管理。
+
+
+
 
 ## unsort bin
 
