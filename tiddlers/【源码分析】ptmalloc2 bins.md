@@ -174,7 +174,16 @@ struct malloc_chunk {
 
 所以堆管理器就利用这个结构中的 fd_nextsize 和 bk_nextsize 来链接到下一个 size 的堆块头部和上一个 size 的堆块头部。然后在相同 size 的堆块内部再通过 fd 和 bk 来进行内部的管理。
 
+比如说我释放 0x400 0x410 0x420 （这里的释放顺序不重要）三个大小的 chunk 进入 largebin，首先他们三个会在同一个 index 里，其次他们三个会按照从大到小的顺序排序：即表头是最大的 chunk，在这个循环链表中 fd 可以理解为下一个堆块、bk 是上一个堆块、nfd 指向下一个大小的堆块、nbk 指向上一个大小的堆块，这里就能体现出 nfd/nbk 和 fd/bk 的区别了：
 
+- 首先规定一下双向循环链表的 “上” 和 “下”，只需将 `bk = largebin_addr` 的 chunk 放在最上面、`fd = largebin_addr` 的 chunk 放在最下面，即可确定“顺序”（而且在 pwndbg 中查看 largebins 时，也会表现为一种从左到右的单向链表）
+- largebin 中同一个 index 的 chunk 总是有序的，最大的在上面，最小的在下面，最上面 chunk 的 bk 是 largebin_addr，最下面 chunk 的 fd 是 largbin_addr；
+- 在一个 index 中，同一大小（指大小完全相同）的 chunk 会按照释放顺序排序，即最先释放的在最上面，最后释放的最下面（fd 可能为 largebin_addr）。
+- fd/bk 永远不可能为 0，但是 nfd/nbk 可能为 0，这种情况发生在同一大小的 chunk 排列时，只有最上面的 chunk 作为此大小的 chunk 代表参与到 nfd/nbk 的排序中，其余的 nfd/nbk 都为 0。
+- size 最大的 chunk 的 bk_nextsize 指向最小的 chunk，size 最小的 chunk 的 fd_nextsize 指向最大的 chunk
+
+![](https://pic.imgdb.cn/item/676cdeedd0e0a243d4ea7b71.png)
+![](https://pic.imgdb.cn/item/676cd9a6d0e0a243d4ea7a91.png)
 
 
 ## unsort bin
