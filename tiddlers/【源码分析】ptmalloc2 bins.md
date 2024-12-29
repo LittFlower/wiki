@@ -25,7 +25,7 @@
 			  ? __alignof__ (long double) : 2 * SIZE_SZ)
 ```
 
-因此在 x86-64 机子上，MALLOC_ALIGNMENT 是 0x10.
+因此在 x86-64 机子上，`MALLOC_ALIGNMENT` 是 0x10.
 
 ```c
 /* pad request bytes into a usable size -- internal version */
@@ -98,7 +98,6 @@ malloc_init_state (mstate av)
 存储数据的 chunk size 的公差也可以通过 `fastbin_index` 看，x86 下大小是 0x8 bytes，在 x86-64 下是 0x10 bytes。
 
 
-
 ## small bin
 
 ```c
@@ -151,7 +150,50 @@ x64 下，这两行注释表明，smallbin 的个数最多是 64，公差为 0x1
 
 根据这个推一下，当 `sz = 0x400` 时，`sz >> 6 = 16` 故起始 index 确确实实是 64，根据这个宏可以推出 x86-64 下的 largebin 的取值范围情况，它将 bin 分为 6 组，每个组内的 chunk 大小的公差一致。
 
-简单说一下这里怎么调试，main_arena 作为 libc.so.6 的全局静态变量，可以在 gdb 里直接查看 bins 数组，然后可以查看当前的 largebin 在 bins 里的 index。
+```
+size              index
+[0x400 , 0x440)    64
+[0x440 , 0x480)    65
+[0x480 , 0x4C0)    66
+[0x4C0 , 0x500)    67
+[0x500 , 0x540)    68
+等差 0x40    …
+[0xC00 , 0xC40)    96
+--------------------------
+[0xC40 , 0xE00)    97
+[0xE00 , 0x1000)    98
+[0x1000 , 0x1200)    99
+[0x1200 , 0x1400)    100
+[0x1400 , 0x1600)    101
+等差 0x200    …
+[0x2800 , 0x2A00)    111
+--------------------------
+[0x2A00 , 0x3000)    112
+[0x3000 , 0x4000)    113
+[0x4000 , 0x5000)    114
+等差 0x1000    …
+[0x9000 , 0xA000)    119
+--------------------------
+[0xA000 , 0x10000)    120
+[0x10000 , 0x18000)    121
+[0x18000 , 0x20000)    122
+[0x20000 , 0x28000)    123
+---------------------------
+[0x28000 , 0x40000)    124
+[0x40000 , 0x80000)    125
+---------------------------
+[0x80000 , …. )    126
+```
+
+所以 63 = 33 + 15 + 8 + 4 + 2 + 1。
+
+简单说一下这里怎么调试，`main_arena` 作为 libc.so.6 的全局静态变量，可以在 gdb 里直接查看 `bins` 数组，然后可以查看当前的 largebin 在 `bins` 里的 `index`。
+
+```bash
+pwndbg> p main_arena  # 可以查看全局变量的内容
+pwndbg> p & main_arena  # 可以查看 main_arena 的位置
+``` 
+
 
 总之你可以看出来，就算在同一个 largebin index 中，其 chunk 大小也有差别，这和 fastbin 是不一样的。
 
@@ -188,3 +230,15 @@ struct malloc_chunk {
 
 ## unsort bin
 
+
+```
+/* The otherwise unindexable 1-bin is used to hold unsorted chunks. */
+#define unsorted_chunks(M)          (bin_at (M, 1))
+```
+
+由此看出所有的 unsortbin 都放在 `bin[1]` 里。
+
+unsorted bin 中的空闲 chunk 处于乱序状态，他们的主要来源是：
+- 当一个较大的 chunk 被分割成两半后，如果剩下的部分大于 MINSIZE，就会被放到 unsorted bin 中。
+- 释放一个不属于 fast bin 的 chunk，并且该 chunk 不和 top chunk 紧邻时，该 chunk 会被首先放到 unsorted bin 中。
+- 当进行 `malloc_consolidate` 时，可能会把合并后的 chunk 放到 unsorted bin 中，如果不是和 top chunk 近邻的话。
