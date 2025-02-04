@@ -1,0 +1,7 @@
+created: 20250203161005984
+creator: LittFlower
+modified: 20250203201614274
+modifier: LittFlower
+tags: 二进制漏洞利用技术 Pwn Linux
+title: 禁用 execve 时使用 execveat
+type: text/markdown
