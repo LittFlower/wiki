@@ -6,6 +6,12 @@
 
 ## execve
 
+### 理论
+
+execve() 调用成功后不会返回, 其进程的正文(text), 数据(data), bss 和堆栈 (stack) 段被调入程序覆盖。调入程序继承了调用程序的 PID 和所有打开的文件描述符, 他们不会因为 exec 过程而关闭. 父进程的未决信号被清除. 所有被调用进程设置过的信号重置为缺省行为.
+
+### 检验
+
 写一个 poc：
 
 ```c
@@ -49,7 +55,17 @@ PID TTY      STAT   TIME COMMAND
 
 如何解读 STAT 字段呢？可以看 [[解读 ps 的 STAT 字段]]。
 
-### system
+## system
+
+### 理论
+
+The system() library function behaves as if it used fork(2) to create a child process that executed the shell command specified in command using execl(3) as follows:
+﻿
+execl("/bin/sh", "sh", "-c", command, (char *) NULL);
+﻿
+system() returns after the command has been completed.
+
+### 检验
 
 ```c
 #include <stdio.h>

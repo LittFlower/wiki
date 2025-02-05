@@ -1,0 +1,337 @@
+created: 20250203161005984
+creator: LittFlower
+modified: 20250205104557910
+modifier: LittFlower
+tags: 二进制漏洞利用技术 Pwn Linux
+title: 禁用 execve 时使用 execveat
+
+当沙箱禁用系统调用 execve，往往会想到去用 execveat，但是有的时候会发现 execveat 也无法调用，这是为什么呢？
+
+execveat 源码：
+
+首先在 `fs/exec.c` 里
+
+```c
+static int do_execveat(int fd, struct filename *filename,
+		const char __user *const __user *__argv,
+		const char __user *const __user *__envp,
+		int flags)
+{
+	struct user_arg_ptr argv = { .ptr.native = __argv };
+	struct user_arg_ptr envp = { .ptr.native = __envp };
+
+	return do_execveat_common(fd, filename, argv, envp, flags);
+}
+```
+
+调用了 `do_execveat_common()`，跟进去看：
+
+```c
+static int do_execveat_common(int fd, struct filename *filename,
+			      struct user_arg_ptr argv,
+			      struct user_arg_ptr envp,
+			      int flags)
+{
+	struct linux_binprm *bprm;
+	int retval;
+
+	if (IS_ERR(filename))
+		return PTR_ERR(filename);
+
+	/*
+	 * We move the actual failure in case of RLIMIT_NPROC excess from
+	 * set*uid() to execve() because too many poorly written programs
+	 * don't check setuid() return code.  Here we additionally recheck
+	 * whether NPROC limit is still exceeded.
+	 */
+	if ((current->flags & PF_NPROC_EXCEEDED) &&
+	    is_rlimit_overlimit(current_ucounts(), UCOUNT_RLIMIT_NPROC, rlimit(RLIMIT_NPROC))) {
+		retval = -EAGAIN;
+		goto out_ret;
+	}
+
+	/* We're below the limit (still or again), so we don't want to make
+	 * further execve() calls fail. */
+	current->flags &= ~PF_NPROC_EXCEEDED;
+
+	bprm = alloc_bprm(fd, filename, flags);
+	if (IS_ERR(bprm)) {
+		retval = PTR_ERR(bprm);
+		goto out_ret;
+	}
+
+	retval = count(argv, MAX_ARG_STRINGS);
+	if (retval == 0)
+		pr_warn_once("process '%s' launched '%s' with NULL argv: empty string added\n",
+			     current->comm, bprm->filename);
+	if (retval < 0)
+		goto out_free;
+	bprm->argc = retval;
+
+	retval = count(envp, MAX_ARG_STRINGS);
+	if (retval < 0)
+		goto out_free;
+	bprm->envc = retval;
+
+	retval = bprm_stack_limits(bprm);
+	if (retval < 0)
+		goto out_free;
+
+	retval = copy_string_kernel(bprm->filename, bprm);
+	if (retval < 0)
+		goto out_free;
+	bprm->exec = bprm->p;
+
+	retval = copy_strings(bprm->envc, envp, bprm);
+	if (retval < 0)
+		goto out_free;
+
+	retval = copy_strings(bprm->argc, argv, bprm);
+	if (retval < 0)
+		goto out_free;
+
+	/*
+	 * When argv is empty, add an empty string ("") as argv[0] to
+	 * ensure confused userspace programs that start processing
+	 * from argv[1] won't end up walking envp. See also
+	 * bprm_stack_limits().
+	 */
+	if (bprm->argc == 0) {
+		retval = copy_string_kernel("", bprm);
+		if (retval < 0)
+			goto out_free;
+		bprm->argc = 1;
+	}
+
+	retval = bprm_execve(bprm);
+out_free:
+	free_bprm(bprm);
+
+out_ret:
+	putname(filename);
+	return retval;
+}
+
+```
+
+看 `alloc_bprm`
+
+```c
+static struct linux_binprm *alloc_bprm(int fd, struct filename *filename, int flags)
+{
+	struct linux_binprm *bprm;
+	struct file *file;
+	int retval = -ENOMEM;
+
+	file = do_open_execat(fd, filename, flags);
+	if (IS_ERR(file))
+		return ERR_CAST(file);
+
+	bprm = kzalloc(sizeof(*bprm), GFP_KERNEL);
+	if (!bprm) {
+		do_close_execat(file);
+		return ERR_PTR(-ENOMEM);
+	}
+
+	bprm->file = file;
+
+	if (fd == AT_FDCWD || filename->name[0] == '/') {
+		bprm->filename = filename->name;
+	} else {
+		if (filename->name[0] == '\0')
+			bprm->fdpath = kasprintf(GFP_KERNEL, "/dev/fd/%d", fd);
+		else
+			bprm->fdpath = kasprintf(GFP_KERNEL, "/dev/fd/%d/%s",
+						  fd, filename->name);
+		if (!bprm->fdpath)
+			goto out_free;
+
+		/*
+		 * Record that a name derived from an O_CLOEXEC fd will be
+		 * inaccessible after exec.  This allows the code in exec to
+		 * choose to fail when the executable is not mmaped into the
+		 * interpreter and an open file descriptor is not passed to
+		 * the interpreter.  This makes for a better user experience
+		 * than having the interpreter start and then immediately fail
+		 * when it finds the executable is inaccessible.
+		 */
+		if (get_close_on_exec(fd))
+			bprm->interp_flags |= BINPRM_FLAGS_PATH_INACCESSIBLE;
+
+		bprm->filename = bprm->fdpath;
+	}
+	bprm->interp = bprm->filename;
+
+	retval = bprm_mm_init(bprm);
+	if (!retval)
+		return bprm;
+
+out_free:
+	free_bprm(bprm);
+	return ERR_PTR(retval);
+}
+```
+
+跟入 `do_open_execat` 函数
+
+```c
+static struct file *do_open_execat(int fd, struct filename *name, int flags)
+{
+	int err;
+	struct file *file __free(fput) = NULL;
+	struct open_flags open_exec_flags = {
+		.open_flag = O_LARGEFILE | O_RDONLY | __FMODE_EXEC,
+		.acc_mode = MAY_EXEC,
+		.intent = LOOKUP_OPEN,
+		.lookup_flags = LOOKUP_FOLLOW,
+	};
+
+	if ((flags & ~(AT_SYMLINK_NOFOLLOW | AT_EMPTY_PATH)) != 0)
+		return ERR_PTR(-EINVAL);
+	if (flags & AT_SYMLINK_NOFOLLOW)
+		open_exec_flags.lookup_flags &= ~LOOKUP_FOLLOW;
+	if (flags & AT_EMPTY_PATH)
+		open_exec_flags.lookup_flags |= LOOKUP_EMPTY;
+
+	file = do_filp_open(fd, name, &open_exec_flags);
+	if (IS_ERR(file))
+		return file;
+
+	/*
+	 * In the past the regular type check was here. It moved to may_open() in
+	 * 633fb6ac3980 ("exec: move S_ISREG() check earlier"). Since then it is
+	 * an invariant that all non-regular files error out before we get here.
+	 */
+	if (WARN_ON_ONCE(!S_ISREG(file_inode(file)->i_mode)) ||
+	    path_noexec(&file->f_path))
+		return ERR_PTR(-EACCES);
+
+	err = deny_write_access(file);
+	if (err)
+		return ERR_PTR(err);
+
+	return no_free_ptr(file);
+}
+```
+
+**这里会调用 `do_filp_open()`**。
+
+接下来看 `openat` 和 `openat2`：
+
+```c
+SYSCALL_DEFINE4(openat, int, dfd, const char __user *, filename, int, flags,
+		umode_t, mode)
+{
+	if (force_o_largefile())
+		flags |= O_LARGEFILE;
+	return do_sys_open(dfd, filename, flags, mode);
+}
+
+SYSCALL_DEFINE4(openat2, int, dfd, const char __user *, filename,
+		struct open_how __user *, how, size_t, usize)
+{
+	int err;
+	struct open_how tmp;
+
+	BUILD_BUG_ON(sizeof(struct open_how) < OPEN_HOW_SIZE_VER0);
+	BUILD_BUG_ON(sizeof(struct open_how) != OPEN_HOW_SIZE_LATEST);
+
+	if (unlikely(usize < OPEN_HOW_SIZE_VER0))
+		return -EINVAL;
+	if (unlikely(usize > PAGE_SIZE))
+		return -E2BIG;
+
+	err = copy_struct_from_user(&tmp, sizeof(tmp), how, usize);
+	if (err)
+		return err;
+
+	audit_openat2_how(&tmp);
+
+	/* O_LARGEFILE is only allowed for non-O_PATH. */
+	if (!(tmp.flags & O_PATH) && force_o_largefile())
+		tmp.flags |= O_LARGEFILE;
+
+	return do_sys_openat2(dfd, filename, &tmp);
+}
+
+```
+
+看 `do_sys_open()`，跟进去，发现会调用 `do_sys_openat2`：
+
+```c
+static long do_sys_openat2(int dfd, const char __user *filename,
+			   struct open_how *how)
+{
+	struct open_flags op;
+	int fd = build_open_flags(how, &op);
+	struct filename *tmp;
+
+	if (fd)
+		return fd;
+
+	tmp = getname(filename);
+	if (IS_ERR(tmp))
+		return PTR_ERR(tmp);
+
+	fd = get_unused_fd_flags(how->flags);
+	if (fd >= 0) {
+		struct file *f = do_filp_open(dfd, tmp, &op);
+		if (IS_ERR(f)) {
+			put_unused_fd(fd);
+			fd = PTR_ERR(f);
+		} else {
+			fd_install(fd, f);
+		}
+	}
+	putname(tmp);
+	return fd;
+}
+
+long do_sys_open(int dfd, const char __user *filename, int flags, umode_t mode)
+{
+	struct open_how how = build_open_how(flags, mode);
+	return do_sys_openat2(dfd, filename, &how);
+}
+```
+
+注意到 `do_sys_openat2()` **也会调用 `do_filp_open()`**。
+
+综上，`execveat` 会调用 `openat` `openat2` 调用到的函数，所以下面这个 poc 运行后会 core dump:
+
+```c
+#include <stdio.h>
+#include <stdlib.h>
+#include <seccomp.h>
+#include <unistd.h>
+#include <fcntl.h>
+
+int sandbox() {
+    scmp_filter_ctx ctx;
+    int rc;
+
+    ctx = seccomp_init(SCMP_ACT_ALLOW);
+    if (ctx == NULL) {
+        perror("seccomp_init");
+        return -1;
+    }
+    rc = seccomp_rule_add(ctx, SCMP_ACT_KILL, SCMP_SYS(openat), 0);
+    // seccomp_release(ctx);
+    seccomp_load(ctx);
+    return 0;
+}
+
+
+int main() {
+    sandbox();
+    char buffer[100];
+    char *filename = "/bin/sh";
+    char *argv[] = {"/bin/sh", NULL};
+    char *envp[] = {NULL};
+    // syscall(59, filename, argv, envp);
+    syscall(322, AT_FDCWD, filename, argv, envp, 0);
+    return 0;
+}
+```
+
+`execve` 同理。
+	
