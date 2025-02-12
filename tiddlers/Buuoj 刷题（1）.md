@@ -46,4 +46,4 @@ fmt，fmtstr_payload 一把梭。注意第一个参数 offset 是你能控制的
 
 ## jarvisoj_tell_me_something
 
-ret2text，好玩的是题目使用了 bp 寄存器却没有使用 leave 指令。
+ret2text，好玩的是题目使用了 bp 寄存器却没有使用 leave 指令，一般来讲这是因为开启了 O2 优化。
