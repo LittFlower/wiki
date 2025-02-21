@@ -47,3 +47,29 @@ fmt，fmtstr_payload 一把梭。注意第一个参数 offset 是你能控制的
 ## jarvisoj_tell_me_something
 
 ret2text，好玩的是题目使用了 bp 寄存器却没有使用 leave 指令，一般来讲这是因为开启了 O2 优化。
+
+## ciscn_2019_es_2
+
+栈迁移，`printf(%s)` 会被 `\x00` 截断，所以用任意字符盖掉栈上的截断符就可以泄漏栈地址，然后栈迁移。
+
+## [HarekazeCTF2019]baby_rop2
+
+ret2libc，注意使用 `printf` 泄漏 libc 时要找程序中本来就有的格式化字符串利用（比如 `%s`）
+
+## picoctf_2018_rop chain
+
+x86 的栈题，ret2text，注意下参数通过栈传递就没什么了。
+
+## pwn2_sctf_2016
+
+ret2libc + 整数溢出
+
+## jarvisoj_level3
+
+ret2libc
+
+## wustctf2020_getshell
+
+ret2text
+
+
