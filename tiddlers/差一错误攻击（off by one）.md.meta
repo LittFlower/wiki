@@ -1,6 +1,6 @@
 created: 20241220123001702
 creator: LittFlower
-modified: 20250310055503212
+modified: 20250312055703614
 modifier: LittFlower
 tags: 二进制漏洞利用技术 二进制知识 Glibc Pwn
 title: 差一错误攻击（off by one）

