@@ -195,3 +195,7 @@ tcache_put (mchunkptr chunk, size_t tc_idx)
 
 而这种逻辑上的不严谨可能造成多种漏洞，例如 double free 漏洞，即 [[tcache dup]]；还可以伪造一个 size 使得其满足 `tc_idx` 的检查，构造一个 fake chunk，这就是 [[tcache house of spirit]]。
 
+
+## 高版本的 tcache
+
+glibc 2.31 版本中，加入了对 tcache double free 的 check，也就是说不能像以前那样无脑 free 两个一样的 tcache chunk 进行攻击了，但是依然可以打 house of botcake，也就是把 fastbin / unsortbin 和 tcache 结合起来打。
