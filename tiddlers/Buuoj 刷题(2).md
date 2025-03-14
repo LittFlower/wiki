@@ -48,4 +48,17 @@ realloc_hook 里有 6 次 push，还有一个 ` sub rsp, 0x38`，利用这些 ga
 
 [[栈迁移的经验总结]]
 
+## [ZJCTF 2019]EasyHeap
+
+本来可以用 unsort bin attack 直接在 `magic` 那里写一个大数字，然后执行后门函数，但是远程环境有点问题，flag 文件不在 `/home/ctf/flag` 里，，但是毕竟有无限制的任意堆溢出，所以可以直接打 fastbin posioning。
+
+但是如果直接在 `free` 那里劫持 fake fast chunk 的话，必然会把 `_GLOBAL_OFFSET_TABLE_` 改了，然而程序里的 `system@plt` 这个时候还是没有重定位过的，所以会寄。
+
+解决方案是，在 heaparray 处构造 fake chunk，然后改 `heaparray[0]` 为 `free@got`，然后就可以只把 `free@got` 处的 8 个字节改成 `system` 而不破坏重定位表。
+
+## ciscn_2019_s_2
+
+卡了一会，这个题的考点在于 `realloc` 的特性：如果 `size` 为 `0 ，则`realloc` 相当于一个 `free`。在这道题目里这个时候就存在 uaf 漏洞了。
+
+先通过切割 unsortbin 泄漏 libc，然后打 tcache double free 和 tcache posioning 修改 _free_hook。
 
