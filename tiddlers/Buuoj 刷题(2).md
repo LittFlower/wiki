@@ -62,3 +62,14 @@ realloc_hook 里有 6 次 push，还有一个 ` sub rsp, 0x38`，利用这些 ga
 
 先通过切割 unsortbin 泄漏 libc，然后打 tcache double free 和 tcache posioning 修改 _free_hook。
 
+## xp0intctf_2018_tutorial1
+
+签到题，直接发 `p64(0xBABABABA)` 就行。
+
+## xp0intctf_2018_tutorial2
+
+还是签到题，考点和上题类似。
+
+## xp0intctf_2018_fast
+
+glibc 2.27，题目给了一个裸的 UAF，可以打 tcache double free + tcache posioning，任意地址申请到读入的 flag 附近，然后把 flag 直接打印出来。
