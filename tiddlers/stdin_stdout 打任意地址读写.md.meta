@@ -1,6 +1,6 @@
 created: 20250318081549284
 creator: LittFlower
-modified: 20250318082526766
+modified: 20250318170551941
 modifier: LittFlower
 tags: 二进制漏洞利用技术 Pwn Glibc 想法
 title: stdin/stdout 打任意地址读写
