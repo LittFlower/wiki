@@ -1,6 +1,6 @@
 created: 20250225132134111
 creator: LittFlower
-modified: 20250225140131306
+modified: 20250409084534790
 modifier: LittFlower
 tags: 二进制漏洞利用技术 Pwn Linux Glibc C
 title: shellcode 之 ptrace
