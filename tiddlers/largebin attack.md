@@ -9,7 +9,7 @@
 
 ### 2.29 以上
 
-只能写 `bk_nextsize` 为 `target_addr - 0x20` 然后触发来实现攻击了。
+只能写 `bk_nextsize` 为 `target_addr - 0x20` 然后申请一个大于 a 和 b 的 chunk 触发来实现攻击了。
 
 
 ## 效果
