@@ -2,14 +2,20 @@
 
 原理基本上就是源码里那些东西，这里懒得写了，直接写怎么打。
 
-### 2.29 及以下
+### 流程
 
-只需要修改一个 largebin chunk 的 `bk` 和 `bk_nextsize` 字段分别为 `target_addr1 - 0x10` 和 `target_addr2 - 0x20` 就可以了，然后申请一个可以从 unsortbin 里切割出来的小 chunk，这样就能往两个地址里写当前这个 chunk 的堆地址。
+不论版本，首先要申请两个堆块 A B:
+- size(A) > size(B)
+- A 在 largebin 里，B 在 unsortbin 里
+
+#### 2.29 及以下
+
+只需要修改 A 的 `bk` 和 `bk_nextsize` 字段分别为 `target_addr1 - 0x10` 和 `target_addr2 - 0x20` 就可以了，然后申请一个大于 A、B 的堆块 C，这样就能往两个地址里写当前这个 chunk 的堆地址。
 
 
-### 2.29 以上
+#### 2.29 以上
 
-只能写 `bk_nextsize` 为 `target_addr - 0x20` 然后申请一个大于 a 和 b 的 chunk 触发来实现攻击了。
+只能写 `bk_nextsize` 为 `target_addr - 0x20` 然后申请一个大于 A 和 B 的 chunk C 触发来实现攻击了。
 
 
 ## 效果
