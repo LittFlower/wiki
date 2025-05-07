@@ -288,6 +288,7 @@ scanf
 
 另外，`fread`、`fgets` 等函数也是调用 stdin 中的 `_IO_new_file_underflow` 去调用 `read` 的。
 
+一个 trick 是，假如只能任意地址修改有限字节，可以先改 `fp->_IO_buf_base`，然后二次修改。
 
 
 ### stdout 攻击面分析
@@ -481,10 +482,22 @@ static _IO_size_t
 总结一下这部分源码注释里标注的4次 check，总结如下：
 
 - 设置 `fp->_flags & _IO_NO_WRITES == 0`
-- 设置 `fp->_flags & _IO_CURRENTLY_PUTTING == 1`
+- 设置 `fp->_flags & _IO_CURRENTLY_PUTTING == 1`，这个只需要之前输出过一次就会被设置好
 - 设置 `fp -> _fileno = 1`
 - 以下二选一
   * 设置 `fp->_flags & _IO_IS_APPENDING == 1`
   * 设置 `fp->_IO_read_end == fp->_IO_write_base`
 
-也就是把 `fp->flags` 设置为 ???
+那么满足上面这些条件的具体的设置方法有很多：
+
+**方法一**：
+
+- 假设程序已有完整的 `_IO_2_1_stdout`
+- 修改 `fp->_IO_read_end` 和 `fp->_IO_write_base` 的倒数第二字节为 `\x00`
+
+这个方法本质上走的是分支二，可以实现只修改两个字节就泄漏出 libc / pie。
+
+**方法二**：
+
+- 修改 `fp->_flags` 为 `0xfbad1800` 或 `0xfbad1887`，重点在于满足 `fp->_flags & _IO_IS_APPENDING == 1`
+- 然后修改 `fp->_IO_write_base` 和 `fp->_IO_write_ptr` 实现任意地址读。
