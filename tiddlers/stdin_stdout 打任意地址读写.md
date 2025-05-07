@@ -1,10 +1,3 @@
-created: 20250318081549284
-creator: LittFlower
-modified: 20250507094907191
-modifier: LittFlower
-tags: 二进制漏洞利用技术 Pwn Glibc 想法
-title: stdin/stdout 打任意地址读写
-
 ## 简介
 
 FILE 在 Linux 系统的标准 IO 库中是用于描述文件的结构，称为文件流。 FILE 结构在程序执行 fopen 等函数时会进行创建，并分配在堆中。我们常定义一个指向 FILE 结构的指针来接收这个返回值。
@@ -262,7 +255,7 @@ scanf
 ```
 
 为了绕过保护，需要构造有：
-- 设置 `fp->_flags & (~0x4)`（这里最好就是用原来的 `_flags`）
+- 设置 `fp->_flags & (~0x4)`（这里最好就是用原来的 `_flags`）（也就是要设置倒数第二字节为 `\x00`）
 - 设置 `_IO_read_end` 等于 `_IO_read_ptr`
 - 设置 `_fileno == 0`
 - 设置 `fp->_IO_buf_base` 为写入的起始位置，`fp->_IO_buf_end` 为写入的终止位置，`fp->_IO_buf_end - fp->_IO_buf_base` 为读入的长度
@@ -291,10 +284,9 @@ scanf
 
 
 
-
 可以看到，如想通过 `stdin` 打任意地址写，需要修改的字节还是比较多的。
 
-另外，`fread` 函数也是调用 stdin 中的 `_IO_new_file_underflow` 去调用 `read` 的。
+另外，`fread`、`fgets` 等函数也是调用 stdin 中的 `_IO_new_file_underflow` 去调用 `read` 的。
 
 
 
@@ -365,7 +357,7 @@ _IO_new_file_xsputn (FILE *f, const void *data, size_t n)
     {
       if (count > to_do)
 	count = to_do;
-      f->_IO_write_ptr = __mempcpy (f->_IO_write_ptr, s, count);
+      f->_IO_write_ptr = __mempcpy (f->_IO_write_ptr, s, count);  // 注意这里1️⃣
       s += count;
       to_do -= count;
     }
@@ -378,23 +370,7 @@ _IO_new_file_xsputn (FILE *f, const void *data, size_t n)
 	   caller that everything has been written.  */
 	return to_do == 0 ? EOF : n - to_do;
 
-      /* Try to maintain alignment: write a whole number of blocks.  */
-      block_size = f->_IO_buf_end - f->_IO_buf_base;
-      do_write = to_do - (block_size >= 128 ? to_do % block_size : 0);
-
-      if (do_write)
-	{
-	  count = new_do_write (f, s, do_write);
-	  to_do -= count;
-	  if (count < do_write)
-	    return n - to_do;
-	}
-
-      /* Now write out the remainder.  Normally, this will fit in the
-	 buffer, but it's somewhat messier for line-buffered files,
-	 so we let _IO_default_xsputn handle the general case. */
-      if (to_do)
-	to_do -= _IO_default_xsputn (f, s+do_write, to_do);
+	  ...
     }
   return n - to_do;
 }
@@ -413,7 +389,7 @@ _IO_new_file_overflow (FILE *f, int ch)
       return EOF;
     }
   /* If currently reading or no buffer allocated. */
-  if ((f->_flags & _IO_CURRENTLY_PUTTING) == 0 || f->_IO_write_base == NULL)  // check2
+  if ((f->_flags & _IO_CURRENTLY_PUTTING) == 0 || f->_IO_write_base == NULL)   // check2
     {
       /* Allocate a buffer if needed. */
       if (f->_IO_write_base == NULL)
@@ -421,21 +397,7 @@ _IO_new_file_overflow (FILE *f, int ch)
 	  _IO_doallocbuf (f);
 	  _IO_setg (f, f->_IO_buf_base, f->_IO_buf_base, f->_IO_buf_base);
 	}
-      /* Otherwise must be currently reading.
-	 If _IO_read_ptr (and hence also _IO_read_end) is at the buffer end,
-	 logically slide the buffer forwards one block (by setting the
-	 read pointers to all point at the beginning of the block).  This
-	 makes room for subsequent output.
-	 Otherwise, set the read pointers to _IO_read_end (leaving that
-	 alone, so it can continue to correspond to the external position). */
-      if (__glibc_unlikely (_IO_in_backup (f)))
-	{
-	  size_t nbackup = f->_IO_read_end - f->_IO_read_ptr;
-	  _IO_free_backup_area (f);
-	  f->_IO_read_base -= MIN (nbackup,
-				   f->_IO_read_base - f->_IO_buf_base);
-	  f->_IO_read_ptr = f->_IO_read_base;
-	}
+      ...
 
       if (f->_IO_read_ptr == f->_IO_buf_end)
 	f->_IO_read_end = f->_IO_read_ptr = f->_IO_buf_base;
@@ -449,19 +411,80 @@ _IO_new_file_overflow (FILE *f, int ch)
 	f->_IO_write_end = f->_IO_write_ptr;
     }
   if (ch == EOF)
-    return _IO_do_write (f, f->_IO_write_base,
+    return _IO_do_write (f, f->_IO_write_base,   // 注意这里2️⃣
 			 f->_IO_write_ptr - f->_IO_write_base);
-  if (f->_IO_write_ptr == f->_IO_buf_end ) /* Buffer is really full */
-    if (_IO_do_flush (f) == EOF)
-      return EOF;
-  *f->_IO_write_ptr++ = ch;
-  if ((f->_flags & _IO_UNBUFFERED)
-      || ((f->_flags & _IO_LINE_BUF) && ch == '\n'))
-    if (_IO_do_write (f, f->_IO_write_base,
-		      f->_IO_write_ptr - f->_IO_write_base) == EOF)
-      return EOF;
-  return (unsigned char) ch;
+  ...
 }
 ```
 
-这里会调用 `_IO_do_write`
+这里会调用 `_IO_do_write`，这个作用是输出缓冲区。
+
+#### 任意写
+
+这一部分的攻击面来自于上面那段“注意这里1️⃣”，如果我们劫持了 `fp->_IO_write_ptr` 就可以任意地址写了。
+
+也就是说，只需要构造：`fp -> _IO_write_ptr` 和 `fp -> _IO_write_end`，指向要写的位置。
+
+#### 任意读
+
+
+这一部分的攻击面来自于上面那段“注意这里2️⃣”
+
+再看一下 `_IO_do_write`：
+
+
+```c
+// 位于libio/fileops.c
+int _IO_new_do_write(_IO_FILE *fp, const char *data, _IO_size_t to_do)
+{
+    return (to_do == 0 || (_IO_size_t)new_do_write(fp, data, to_do) == to_do) ? 0 : EOF;
+}
+libc_hidden_ver(_IO_new_do_write, _IO_do_write)
+
+static _IO_size_t
+    new_do_write(_IO_FILE *fp, const char *data, _IO_size_t to_do)
+{
+    _IO_size_t count;
+    // 有两个判断，第一个看起来不影响，但else if里面比较复杂不可控，需要绕过
+    if (fp->_flags & _IO_IS_APPENDING)       // check3
+        /* On a system without a proper O_APPEND implementation,
+           you would need to sys_seek(0, SEEK_END) here, but is
+           not needed nor desirable for Unix- or Posix-like systems.
+           Instead, just indicate that offset (before and after) is
+           unpredictable. */
+        fp->_offset = _IO_pos_BAD;
+    else if (fp->_IO_read_end != fp->_IO_write_base)   // check4
+    {
+        _IO_off64_t new_pos = _IO_SYSSEEK(fp, fp->_IO_write_base - fp->_IO_read_end, 1);
+        if (new_pos == _IO_pos_BAD)
+            return 0;
+        fp->_offset = new_pos;
+    }
+    // 满足条件后通过系统调用执行_IO_SYSWRITE
+    // data从上面传过来的，是f->_IO_write_base, to_do是f->_IO_write_ptr - f->_IO_write_base
+    // 意思就是输出f -> _IO_write_base和_IO_write_ptr之间的内容
+    count = _IO_SYSWRITE(fp, data, to_do); 
+    // 后面已经和我们无关
+    if (fp->_cur_column && count)
+        fp->_cur_column = _IO_adjust_column(fp->_cur_column - 1, data, count) + 1;
+    _IO_setg(fp, fp->_IO_buf_base, fp->_IO_buf_base, fp->_IO_buf_base);
+    fp->_IO_write_base = fp->_IO_write_ptr = fp->_IO_buf_base;
+    fp->_IO_write_end = (fp->_mode <= 0 && (fp->_flags & (_IO_LINE_BUF | _IO_UNBUFFERED))
+                             ? fp->_IO_buf_base
+                             : fp->_IO_buf_end);
+    return count;
+}
+```
+
+这个函数有两个分支，一般是选择第一个分支来打。
+
+总结一下这部分源码注释里标注的4次 check，总结如下：
+
+- 设置 `fp->_flags & _IO_NO_WRITES == 0`
+- 设置 `fp->_flags & _IO_CURRENTLY_PUTTING == 1`
+- 设置 `fp -> _fileno = 1`
+- 以下二选一
+  * 设置 `fp->_flags & _IO_IS_APPENDING == 1`
+  * 设置 `fp->_IO_read_end == fp->_IO_write_base`
+
+也就是把 `fp->flags` 设置为 ???
