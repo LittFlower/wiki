@@ -284,3 +284,72 @@ typedef struct elf64_shdr {
 - .rodata：该部分保存只读数据，通常用于进程映像中的非写段。该部分的类型为 SHT_PROGBITS。使用的属性是 SHF_ALLOC。
 - .strtab：这部分存放字符串，最常见的是表示与符号表项相关名称的字符串。如果文件有一个包含符号字符串表的可加载段，该部分的属性将包括 SHF_ALLOC 位。否则，不会设置这个位。该部分的类型为 SHT_STRTAB。
 - .symtab：该部分包含一个符号表。如果文件有一个包含符号表的可加载段，该部分的属性将包括 SHF_ALLOC 位，否则不会设置该位。该部分的类型为 SHT_SYMTAB。
+
+
+这里重点说一下符号表、字符串表、重定位表等动态链接是经常使用的部分，一个经典的应用场景就是 [[ret2dlresolve 手法总结]]。
+
+
+#### 符号表
+
+目标文件的符号表保存着定位和重新定位程序的符号定义和引用所需的信息。
+
+
+```c
+typedef struct elf32_sym {
+  Elf32_Word	st_name;
+  Elf32_Addr	st_value;
+  Elf32_Word	st_size;
+  unsigned char	st_info;
+  unsigned char	st_other;
+  Elf32_Half	st_shndx;
+} Elf32_Sym;
+
+typedef struct elf64_sym {
+  Elf64_Word st_name;		/* 一个字符串表的索引值，如果为0说明符号没有名称 */
+  unsigned char	st_info;	/* 指定符号的类型和绑定的属性 */
+  unsigned char	st_other;	/* 定义了符号的可见性 */
+  Elf64_Half st_shndx;		/* 每个符号表条目都与某个部分相关。该成员保存相关的段头表索引。 */
+  Elf64_Addr st_value;		/* 相关符号的地址 */
+  Elf64_Xword st_size;		/* 符号的大小 */
+} Elf64_Sym;
+```
+
+注意到，32 位和 64 位下符号表的结构中成员是相同的，只是顺序不同。
+
+
+### 重定位表
+
+重定位表包括 .rel 和 .rela，是将符号引用与符号定义连接起来的过程，在动态链接解析函数符号的过程中非常重要。
+
+```c
+/* The following are used with relocations */
+#define ELF32_R_SYM(x) ((x) >> 8)
+#define ELF32_R_TYPE(x) ((x) & 0xff)
+
+#define ELF64_R_SYM(i)			((i) >> 32)
+#define ELF64_R_TYPE(i)			((i) & 0xffffffff)
+
+typedef struct elf32_rel {
+  Elf32_Addr	r_offset;
+  Elf32_Word	r_info;
+} Elf32_Rel;
+
+typedef struct elf64_rel {
+  Elf64_Addr r_offset;	/* Location at which to apply the action */
+  Elf64_Xword r_info;	/* index and type of relocation */
+} Elf64_Rel;
+
+typedef struct elf32_rela {
+  Elf32_Addr	r_offset;
+  Elf32_Word	r_info;
+  Elf32_Sword	r_addend;
+} Elf32_Rela;
+
+typedef struct elf64_rela {
+  Elf64_Addr r_offset;	/* Location at which to apply the action */
+  Elf64_Xword r_info;	/* index and type of relocation */
+  Elf64_Sxword r_addend;	/* Constant addend used to compute value */
+} Elf64_Rela;
+```
+
+
