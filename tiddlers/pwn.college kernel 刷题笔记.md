@@ -106,4 +106,257 @@ int main() {
 
 和 1.0 比较类似，不再赘述。
 
-## 
+## level 2.0
+
+设备驱动里没有 `read` 函数，程序逻辑是字符串校验通过后直接 `printk` flag，因此可以通过 `dmesg` 查看 flag
+
+## level 2.1
+
+同上。
+
+## level 3.0
+
+题目里的 `win` 函数使用了两个很重要的提权函数，一个是 `prepare_kernel_cred`，另一个是 `commit_creds`，第一个函数源码如下：
+
+```c
+/**
+ * prepare_kernel_cred - Prepare a set of credentials for a kernel service
+ * @daemon: A userspace daemon to be used as a reference
+ *
+ * Prepare a set of credentials for a kernel service.  This can then be used to
+ * override a task's own credentials so that work can be done on behalf of that
+ * task that requires a different subjective context.
+ *
+ * @daemon is used to provide a base for the security record, but can be NULL.
+ * If @daemon is supplied, then the security data will be derived from that;
+ * otherwise they'll be set to 0 and no groups, full capabilities and no keys.
+ *
+ * The caller may change these controls afterwards if desired.
+ *
+ * Returns the new credentials or NULL if out of memory.
+ *
+ * Does not take, and does not return holding current->cred_replace_mutex.
+ */
+struct cred *prepare_kernel_cred(struct task_struct *daemon)
+{
+	const struct cred *old;
+	struct cred *new;
+
+	new = kmem_cache_alloc(cred_jar, GFP_KERNEL);
+	if (!new)
+		return NULL;
+
+	kdebug("prepare_kernel_cred() alloc %p", new);
+
+	if (daemon)
+		old = get_task_cred(daemon);
+	else
+		old = get_cred(&init_cred);  // 正常来讲 daemon 为 NULL 就会执行这里
+
+	validate_creds(old);
+
+	*new = *old;
+	atomic_set(&new->usage, 1);
+	set_cred_subscribers(new, 0);
+	get_uid(new->user);
+	get_user_ns(new->user_ns);
+	get_group_info(new->group_info);
+
+#ifdef CONFIG_KEYS
+	new->session_keyring = NULL;
+	new->process_keyring = NULL;
+	new->thread_keyring = NULL;
+	new->request_key_auth = NULL;
+	new->jit_keyring = KEY_REQKEY_DEFL_THREAD_KEYRING;
+#endif
+
+#ifdef CONFIG_SECURITY
+	new->security = NULL;
+#endif
+	if (security_prepare_creds(new, old, GFP_KERNEL) < 0)
+		goto error;
+
+	put_cred(old);
+	validate_creds(new);
+	return new;
+
+error:
+	put_cred(new);
+	put_cred(old);
+	return NULL;
+}
+EXPORT_SYMBOL(prepare_kernel_cred);
+```
+
+
+可以创建一个 cred 结构体，`init_cred` 结构如下：
+
+```c
+/*
+ * The initial credentials for the initial task
+ */
+struct cred init_cred = {
+	.usage			= ATOMIC_INIT(4),
+#ifdef CONFIG_DEBUG_CREDENTIALS
+	.subscribers		= ATOMIC_INIT(2),
+	.magic			= CRED_MAGIC,
+#endif
+	.uid			= GLOBAL_ROOT_UID,
+	.gid			= GLOBAL_ROOT_GID,
+	.suid			= GLOBAL_ROOT_UID,
+	.sgid			= GLOBAL_ROOT_GID,
+	.euid			= GLOBAL_ROOT_UID,
+	.egid			= GLOBAL_ROOT_GID,
+	.fsuid			= GLOBAL_ROOT_UID,
+	.fsgid			= GLOBAL_ROOT_GID,
+	.securebits		= SECUREBITS_DEFAULT,
+	.cap_inheritable	= CAP_EMPTY_SET,
+	.cap_permitted		= CAP_FULL_SET,
+	.cap_effective		= CAP_FULL_SET,
+	.cap_bset		= CAP_FULL_SET,
+	.user			= INIT_USER,
+	.user_ns		= &init_user_ns,
+	.group_info		= &init_groups,
+};
+```
+
+注意到其中的 uid 是 root 对应的 0。
+
+```c
+/**
+ * commit_creds - Install new credentials upon the current task
+ * @new: The credentials to be assigned
+ *
+ * Install a new set of credentials to the current task, using RCU to replace
+ * the old set.  Both the objective and the subjective credentials pointers are
+ * updated.  This function may not be called if the subjective credentials are
+ * in an overridden state.
+ *
+ * This function eats the caller's reference to the new credentials.
+ *
+ * Always returns 0 thus allowing this function to be tail-called at the end
+ * of, say, sys_setgid().
+ */
+int commit_creds(struct cred *new)
+{
+	struct task_struct *task = current;
+	const struct cred *old = task->real_cred;
+
+	kdebug("commit_creds(%p{%d,%d})", new,
+	       atomic_read(&new->usage),
+	       read_cred_subscribers(new));
+
+	BUG_ON(task->cred != old);
+#ifdef CONFIG_DEBUG_CREDENTIALS
+	BUG_ON(read_cred_subscribers(old) < 2);
+	validate_creds(old);
+	validate_creds(new);
+#endif
+	BUG_ON(atomic_read(&new->usage) < 1);
+
+	get_cred(new); /* we will require a ref for the subj creds too */
+
+	/* dumpability changes */
+	if (!uid_eq(old->euid, new->euid) ||
+	    !gid_eq(old->egid, new->egid) ||
+	    !uid_eq(old->fsuid, new->fsuid) ||
+	    !gid_eq(old->fsgid, new->fsgid) ||
+	    !cred_cap_issubset(old, new)) {
+		if (task->mm)
+			set_dumpable(task->mm, suid_dumpable);
+		task->pdeath_signal = 0;
+		smp_wmb();
+	}
+
+	/* alter the thread keyring */
+	if (!uid_eq(new->fsuid, old->fsuid))
+		key_fsuid_changed(task);
+	if (!gid_eq(new->fsgid, old->fsgid))
+		key_fsgid_changed(task);
+
+	/* do it
+	 * RLIMIT_NPROC limits on user->processes have already been checked
+	 * in set_user().
+	 */
+	alter_cred_subscribers(new, 2);
+	if (new->user != old->user)
+		atomic_inc(&new->user->processes);
+	rcu_assign_pointer(task->real_cred, new);
+	rcu_assign_pointer(task->cred, new);
+	if (new->user != old->user)
+		atomic_dec(&old->user->processes);
+	alter_cred_subscribers(old, -2);
+
+	/* send notifications */
+	if (!uid_eq(new->uid,   old->uid)  ||
+	    !uid_eq(new->euid,  old->euid) ||
+	    !uid_eq(new->suid,  old->suid) ||
+	    !uid_eq(new->fsuid, old->fsuid))
+		proc_id_connector(task, PROC_EVENT_UID);
+
+	if (!gid_eq(new->gid,   old->gid)  ||
+	    !gid_eq(new->egid,  old->egid) ||
+	    !gid_eq(new->sgid,  old->sgid) ||
+	    !gid_eq(new->fsgid, old->fsgid))
+		proc_id_connector(task, PROC_EVENT_GID);
+
+	/* release the old obj and subj refs both */
+	put_cred(old);
+	put_cred(old);
+	return 0;
+}
+EXPORT_SYMBOL(commit_creds);
+```
+
+然后用 `commit_creds` 把这个 `init_cred` 提交到当前进程上，这样当前进程就相当于有了 root 权限，之后就可以弹一个 shell 且这个 shell 具有 root 权限。
+
+
+## level 3.1
+
+和上面很类似，不再赘述。
+
+## level 4.0
+
+设备没有注册 write 函数，需要使用 `ioctl` 和设备交互。
+
+`ioctl` 是一个专用于设备输入输出操作的一个系统调用，其调用方式如下：
+
+```c
+int ioctl(int fd, unsigned long request, ...)
+```
+
+然后就可以提权啦
+
+
+## level 4.1
+
+和上一道题类似，不过 fops 结构体里没有定义 `device_open`，所以一开始有点晕。
+
+## level 5.0
+
+```c
+__int64 __fastcall device_ioctl(file *file, unsigned int cmd, unsigned __int64 arg)
+{
+  __int64 result; // rax
+
+  printk(&unk_9A8);
+  result = -1LL;
+  if ( cmd == 1337 )
+  {
+    ((void (__fastcall *)(void *, file *))arg)(&unk_9A8, file);
+    return 0LL;
+  }
+  return result;
+}
+```
+
+然后找一下 `win` 的地址，不知道为啥远程环境虽然没开 kaslr，但是 kallsym 里的地址全是 0 且 `/proc/sys/kernel/kptr_restrict` 也是 0。
+
+不过模块加载的基地址是 0xffffffffc0000000，这个地址加上 ida 看到的偏移也能正常拿到 shell。
+
+
+## level 5.1 
+
+和上一题基本没区别，改一下 `win` 的地址就好了。
+
+
