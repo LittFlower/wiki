@@ -139,6 +139,16 @@ treat_warnings_as_errors = false
 然后基本上就可以编译出一个符合题目环境要求的 d8 版本了。
 
 
+对于 release 版本，为了更多的调试信息，可以在编译参数里添加：
+
+```gn
+v8_enable_backtrace = true
+v8_enable_disassembler = true
+v8_enable_object_print = true
+v8_enable_verify_heap = true
+```
+
+
 ### 调试
 
 #### natives-syntax
@@ -156,3 +166,45 @@ source /path/to/v8/tools/gdbinit
 source /path/to/v8/tools/gdb-v8-support.py
 ```
 
+
+## 相关学习资源
+
+### 关于 v8
+
+* v8 Base
+  * <https://migraine-sudo.github.io/2020/02/15/v8/>
+* V8 javascript engine 代码阅读
+  * <http://eternalsakura13.com/2018/07/09/zujian/>
+* 《JavaScript 引擎 V8 执行流程概述》
+  * <https://mp.weixin.qq.com/s/t__Jqzg1rbTlsCHXKMwh6A>
+* 《ArrayBuffer，二进制数组》
+  * <https://zh.javascript.info/arraybuffer-binary-arrays>
+* 《V8 是怎么跑起来的 —— V8 中的对象表示》
+  * <https://juejin.im/post/5cc7dc5af265da038d0b514d>
+* 《奇技淫巧学 V8 之二，对象在 V8 内的表达》
+  * <https://zhuanlan.zhihu.com/p/28780798>
+* 《V8 Bug Hunting 之 JS 类型对象的内存布局总结》
+  * <https://www.anquanke.com/post/id/185339>
+
+### 关于 v8 exp
+
+* 《GToad Blog》
+  * <https://gtoad.github.io/>
+* 《从一道 CTF 题零基础学 V8 漏洞利用》
+  * <https://www.freebuf.com/vuls/203721.html>
+* 《CVE-2019-5782 v8 数组越界 漏洞复现》
+  * <https://www.sunxiaokong.xyz/2020-02-25/lzx-cve-2019-5782/>
+* v8 利用入门：从越界访问到 RCE
+  * <https://www.freebuf.com/vuls/230182.html>
+* StarCTF 2019 (\*CTF) oob 初探 V8 漏洞利用
+  * <https://www.freebuf.com/vuls/203721.html>
+* Chrome v8 exploit - OOB
+  * <https://xz.aliyun.com/t/5368>
+* \*CTF2019 OOB-v8 Writeup
+  * <https://hpasserby.top/post/825d66e8.html>
+* star ctf Chrome oob Writeup
+  * <http://eternalsakura13.com/2019/04/29/*ctf_oob/>
+* \*CTF 2019 – Chrome oob-v8
+  * <http://www.hackitek.com/starctf-2019-Chrome-oob-v8/>
+* Exploiting v8: \*CTF 2019 oob-v8
+  * <https://syedfarazabrar.com/2019-12-13-starctf-oob-v8-indepth/>

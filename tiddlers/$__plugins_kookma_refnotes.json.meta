@@ -1,12 +1,15 @@
 author: Mohammad Rahmani
-core-version: >=5.2.1
+core-version: >=5.2.5
 dependents: 
 description: References, citations, footnotes and abbreviations in Tiddlywiki
-list: 
+list: readme license history
 name: Refnotes
+packaged-by: Gatha on 23rd July 2025, 11:14:32
 parent-plugin: 
+plugin-priority: 
 plugin-type: plugin
 source: https://github.com/kookma/TW-Refnotes
+stability: STABILITY_2_STABLE
 title: $:/plugins/kookma/refnotes
 type: application/json
-version: 1.9.0
+version: 1.9.1
