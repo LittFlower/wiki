@@ -8,13 +8,13 @@
 
 然后在内存选项卡查看快照 ![](https://pic1.imgdb.cn/item/689aed2658cb8da5c81e0c13.png)
 
-## v8 内存模型
+## v8 JsObject 简介
 
 这里我们要先区分一个概念，即 JavaScript 语言层面和 V8 引擎内部实现层面上对于数据结构的理解是不一样的。
 
 我们先说V8 引擎内部实现层面，在这个层面上，V8 引擎将所有类型大体划分为 smi 和 HeapObject，这个划分的方式称作 Tagged Value 技术，它利用了最低位来区别 Smi 和对象指针，当最低位为 0 时，表明这是一个 Smi；当最低位为 1 时，表明这是一个对象指针。
 
-下面介绍一下 v8 对象结构。
+下面介绍一下 v8 对象（JsObject）的结构。
 
 ### v8 对象结构简介
 
@@ -238,3 +238,79 @@ pwndbg> job 0x0ac0e3a0ac29
 ```
 
 再往前也可以继续看到，不再赘述。
+
+## V8 内存模型
+
+首先贴一个继承关系图，我们从 Smi 开始依次往下介绍。
+
+```
++--------------------------------+
+|       V8 Memory Layout         |
++--------------------------------+
+| Object                         |
+| ├─ Smi                         |
+| └─ HeapObject                  |
+|    ├─ HeapNumber               |
+|    ├─ PropertyCell             |
+|    └─ JSReceiver ─────┐       |
+|       └─ JSObject ────┤       |
+|          ├─ JSFunction        |
+|          ├─ JSArray           |
+|          └─ JSArrayBuffer     |
++--------------------------------+
+```
+
+
+### JsObject
+
+为了完整性，这里简单回顾一下 JsObject，具体细节可以看上一大节。
+
+在V8中，JavaScript 对象初始结构如下所示：
+
+```
+[ hiddenClass / map ] -> ... ; 指向Map
+[ properties        ] -> [empty array]
+[ elements          ] -> [empty array]
+[ reserved #1       ] -\
+[ reserved #2       ]  |
+[ reserved #3       ]  }- in object properties,即预分配的内存空间
+...............        |
+[ reserved #N       ] -/
+```
+
+- `Map` 中存储了一个对象的元信息，包括对象上属性的个数，对象的大小以及指向构造函数和原型的指针等等。同时，Map中保存了Js对象的属性信息，也就是各个属性在对象中存储的偏移。然后属性的值将根据不同的类型，放在 properties、element 以及预留空间中。
+- `properties` 指针，用于保存通过属性名作为索引的元素值，类似于字典类型
+- `elements` 指针，用于保存通过整数值作为索引的元素值，类似于常规数组
+- `reserved #n`，为了提高访问速度，V8在对象中预分配了的一段内存区域，用来存放 in-object 属性，当向 object 中添加属性时，会先尝试将新属性放入这些预留的槽位。当 in-onject 槽位满后，V8才会尝试将新的属性放入 properties 中。
+
+### ArrayBuffer && TypedArray
+
+- ArrayBuffer 对象用来表示通用的、固定长度的原始二进制数据缓冲区。ArrayBuffer 不能直接操作，而是要通过“视图”进行操作。“视图”部署了数组接口，这意味着，可以用数组的方法操作内存。
+- TypedArray 用来生成内存的视图，通过9个构造函数，可以生成9种数据格式的视图，比如Uint8Array（无符号8位整数）数组视图, Int16Array（16位整数）数组视图, Float64Array（64位浮点数）数组视图等等。
+
+简单的说，ArrayBuffer就代表一段原始的二进制数据，而TypedArray代表了一个确定的数据类型，当TypedArray与ArrayBuffer关联，就可以通过特定的数据类型格式来访问内存空间。
+
+这在我们的利用中十分重要，因为这意味着我们可以在一定程度上像C语言一样直接操作内存。
+
+
+内存结构如图：
+
+![ArrayBuffer && TypedArray](https://pic1.imgdb.cn/item/689b798f58cb8da5c81f8cdc.png)
+
+在ArrayBuffer中存在一个BackingStore指针，这个指针指向的就是ArrayBuffer开辟的内存空间，可以使用TypedArray指定的类型读取和写入该区域，并且，这片内存区域是位于系统堆中的而不是属于GC管理的区域。
+
+
+测试用例：
+
+```js
+arr = new ArrayBuffer(0x20);
+u32 = new Uint32Array(arr);
+
+u32[0] = 0x1234;
+u32[1] = 0x5678;
+
+%DebugPrint(u32);
+%SystemBreak();
+readline();
+```
+
