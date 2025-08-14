@@ -278,6 +278,13 @@ Smi 是 Small Integer 的缩写，也就是专门用来表示小整数值。
 |     Signed Value(31Bits)   |  0  |
 |                            |     |
 +----------------------------+-----+
+
+ Smi on 64Bits                                                    
++-------------------------------+-----------------------+-----+
+|                               |                       |     |
+|     Signed Value(32Bits)      |  0-Padding(31Bits)    |  0  |
+|                               |                       |     |
++-------------------------------+-----------------------+-----+
 ```
 
 
@@ -286,11 +293,55 @@ Smi 是 Small Integer 的缩写，也就是专门用来表示小整数值。
 
 同样基于 Tagged Value 技术，通过将一个内存值最低位置为 1 来表示这是一个内存指针。
 
+这个就不画图了，只需要记得不管是 32 位还是 64 位情况下，最低位都是 1。
+
+
+### HeapNumber
+
+继承自 Object->HeapObject，对象的数值范围为 double，一般是用来表示无法在 Smi 范围内表示的整数值。
+
+它的内存结构如下图：
+
+```
++------------------+---+                         
+|  Object Pointer  | 1 +----+                    
++------------------+---+    |                    
+                            |                    
+                +-----------+                    
+                |                                
+                |       +-----------+-----------+
+                +------>|   (Map*)  |  (Value)  |
+                        +-----------+-----------+
+                        ^           ^            
+                        |           |            
+                    KMapOffset     KValueOffset  
+                       =0                =8      
+```
+
+这里的 `Object Pointer` 的意思是，当我们查询一个 HeapNumber 的内存时，会先得到一个指向其具体内存结构的指针（也就是这个 Object Pointer），而其具体的内存结构则是在 offset=0 处存放一个指向 map 的指针，而在 offset=8 处存放一个 IEEE754 编码的 double 型 value。
+
+也就是说，实际上在源码中，V8 的诸如 HeapNumber 这类 class 基本没有成员变量，它们都是通过偏移量独立表示的。为了方便画图，将它画成下面这个样子：
+
+```
++------------------+---+                               
+|  Object Pointer  | 1 +----+                          
++------------------+---+    |                          
+                            |                          
+                +-----------+                          
+                |                                      
+                |       +--------------+--------------+
+                +------>|  KMapOffset* |  KValueOffset|
+                        +--------------+--------------+
+```
+
+后面我们都会用这种方式画图。
+
+
 ### JsObject
 
 为了完整性，这里简单回顾一下 JsObject，具体细节可以看上一大节。
 
-在V8中，JavaScript 对象初始结构如下所示：
+在V8中，JsObject 内存结构如下所示：
 
 ```
 [ hiddenClass / map ] -> ... ; 指向Map
@@ -322,7 +373,7 @@ Smi 是 Small Integer 的缩写，也就是专门用来表示小整数值。
 
 ![ArrayBuffer && TypedArray](https://pic1.imgdb.cn/item/689b798f58cb8da5c81f8cdc.png)
 
-在ArrayBuffer中存在一个BackingStore指针，这个指针指向的就是ArrayBuffer开辟的内存空间，可以使用TypedArray指定的类型读取和写入该区域，并且，这片内存区域是位于系统堆中的而不是属于GC管理的区域。
+在 ArrayBuffer 中存在一个 BackingStore 指针，这个指针指向的就是 ArrayBuffer 开辟的内存空间，可以使用 TypedArray 指定的类型读取和写入该区域，并且，这片内存区域是位于系统堆中的而不是属于GC管理的区域。
 
 
 测试用例：
@@ -339,3 +390,56 @@ u32[1] = 0x5678;
 readline();
 ```
 
+![](https://pic1.imgdb.cn/item/689e0b7c58cb8da5c82560ec.png)
+
+可以清楚的看到上面的结构和结论。
+
+常见利用有：
+
+1. 可以如果修改 ArrayBuffer 中的 Length，那么就能够造成越界访问。
+2. 如果能够修改 BackingStore 指针，那么就可以获得任意读写的能力了，这是非常常用的一个手段
+3. 可以通过 BackingStore 指针泄露堆地址，还可以在堆中布置 shellcode。
+
+
+### JsFunction
+
+内存结构如图：
+
+![JsFunction 内存结构图](https://pic1.imgdb.cn/item/689e0bad58cb8da5c8256105.png)
+
+其中，CodeEntry 是一个指向 JIT 代码的指针（RWX区域），如果具有任意写能力，那么可以向JIT代码处写入自己的 shellcode，实现任意代码执行。
+
+但是，在 v8 6.7 版本之后，function 的 code 不再可写，所以不能够直接修改 jit 代码了。
+
+另外，我自己测试的时候不知道是不是版本原因，这里实际上是 kLiteralsOffset 指向函数区域。
+
+测试代码：
+
+```js
+function func() {
+  let sum = 0;
+  for (let i = 0; i < 100; ++i)
+    sum += i;
+  return sum;
+}
+
+for (let i = 0; i < 100; ++i) {
+  func();
+}
+
+%DebugPrint(func);
+readline();
+```
+
+
+调试结果如下图所示：
+
+![](https://pic1.imgdb.cn/item/689e113c58cb8da5c82563c4.png)
+
+
+## 参考文章
+
+* [v8 Base](https://migraine-sudo.github.io/2020/02/15/v8/)
+* [V8 javascript engine代码阅读](https://web.archive.org/web/20181207172933/https://eternalsakura13.com/2018/07/09/zujian/)
+* [v8 exploit](https://eternalsakura13.com/2018/05/06/v8/)
+* [v8 exploit入门[PlaidCTF roll a d8]](https://xz.aliyun.com/news/4822#toc-9)
