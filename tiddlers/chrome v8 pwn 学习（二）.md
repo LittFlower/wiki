@@ -245,18 +245,21 @@ pwndbg> job 0x0ac0e3a0ac29
 
 ```
 +--------------------------------+
-|       V8 Memory Layout         |
+|        V8 Memory Layout        |
 +--------------------------------+
 | Object                         |
 | ├─ Smi                         |
 | └─ HeapObject                  |
-|    ├─ HeapNumber               |
-|    ├─ PropertyCell             |
-|    └─ JSReceiver ─────┐        |
-|       └─ JSObject ────┤        |
-|          ├─ JSFunction         |
-|          ├─ JSArray            |
-|          └─ JSArrayBuffer      |
+|   ├─ HeapNumber                 |
+|   ├─ PropertyCell               |
+|   ├─ FixedArrayBase             |  
+|   │  ├─ FixedArray              | 
+|   │  └─ FixedDoubleArray        |
+|   └─ JSReceiver ─────┐         |
+|       └─ JSObject ────┤         |
+|         ├─ JSFunction           |
+|         ├─ JSArray              |
+|         └─ JSArrayBuffer        |
 +--------------------------------+
 ```
 
@@ -435,6 +438,42 @@ readline();
 调试结果如下图所示：
 
 ![](https://pic1.imgdb.cn/item/689e113c58cb8da5c82563c4.png)
+
+### FixedArray
+
+它的数据区被定义为 `TaggedValue data[]`，`TaggedValue` 是一种可以存储 SMI（小整数）或指向其他 HeapObject 的指针的类型。这使得 FixedArray 成为一个通用的指针容器。
+
+```
++----------------+---------------+
+|                |               |
+|     length     |     map       |
+|                |               |
++----------------+---------------+
+|                |               |
+|    elements2   |    elements1  |
+|                |               |
++----------------+---------------+
+```
+
+
+### FixedDoubleArray
+
+它的数据区被定义为 double data[]。这意味着它只能存储原始的、未装箱的 64 位浮点数值。这使得它成为一个专用的数值容器。
+
+```
++----------------+---------------+
+|                |               |
+|     length     |     map       |
+|                |               |
++----------------+---------------+
+|                                |
+|     elements in double         |
+|                                |
++--------------------------------+
+```
+
+
+
 
 
 ## 参考文章
