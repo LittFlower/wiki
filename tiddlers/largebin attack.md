@@ -7,6 +7,7 @@
 不论版本，首先要申请两个堆块 A B:
 - size(A) > size(B)
 - A 在 largebin 里，B 在 unsortbin 里
+- size(A) 和 size(B) 要在同一个对应的 largbin 范围内。
 
 #### 2.29 及以下
 
