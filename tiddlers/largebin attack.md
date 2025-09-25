@@ -11,12 +11,17 @@
 
 #### 2.29 及以下
 
+要求被整理进 largebin 的 unsortedbin chunk size 不为 largebin 中的最小
+
 只需要修改 A 的 `bk` 和 `bk_nextsize` 字段分别为 `target_addr1 - 0x10` 和 `target_addr2 - 0x20` 就可以了，然后申请一个大于 A、B 的堆块 C，这样就能往两个地址里写当前这个 chunk 的堆地址。
+
 
 
 #### 2.29 以上
 
-只能写 `bk_nextsize` 为 `target_addr - 0x20` 然后申请一个大于 A 和 B 的 chunk C 触发来实现攻击了。
+只需要满足：被整理进 largebin 的 unsortedbin chunk size 为 largebin 中的最小
+
+只能写 `bk_nextsize` 为 `target_addr - 0x20` 然后申请一个 chunk C 触发来实现攻击了。
 
 
 ## 效果
