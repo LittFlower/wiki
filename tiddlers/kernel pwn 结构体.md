@@ -203,6 +203,8 @@ struct seq_operations {
 /* size: 32, cachelines: 1, members: 4 */
 /* last cacheline: 32 bytes */
 };
+```
+
 
 其中 `start` 和 `stop` 都是可以被劫持的，当用户态对该 `fd` 进行读操作 `read(fd,buf,size)` 时，在内核中会调用 `seq_operations->start` 函数指针；随后也会调用 `seq_operations->stop` 函数指针` 
 
