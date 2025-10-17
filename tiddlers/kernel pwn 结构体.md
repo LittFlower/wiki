@@ -211,6 +211,8 @@ struct seq_operations {
 其中 `start` 和 `stop` 都是可以被劫持的，当用户态对该 `fd` 进行读操作 `read(fd,buf,size)` 时，在内核中会调用 `seq_operations->start` 函数指针；随后也会调用 `seq_operations->stop` 函数指针，不过比较遗憾的是，这两个函数指针都无法控制参数，所以需要配合 `pt_regs` 结构体使用。
 
 > `pt_regs` 结构体：用户态的寄存器在进入内核态的时候会保留在栈底（srop的原理），因此若我们进入内核态前提前控制了这些寄存器的值，那么便可以在内核栈底留下一些可控数据。
+>
+> 在默认开启 `CONFIG_RANDOMIZE_KSTACK_OFFSET` 的新版本内核当中这已经是时泪了（悲），因为这个保护使得固定函数调用到内核栈底的偏移值是变化的
 
 原先我们触发函数指针的方法是 `read(fd, buf, size)`，只需要用汇编语言实现如下就可以了：
 
@@ -289,7 +291,7 @@ int main() {
     for (int i = 0; i < 4; ++i) {
         info("0x%llx", mem[i]);  // 不知道为什么，我这里泄漏不出来 seq_ops 的内容???
     }
-    mem[0] = 0xffffffff815f5951;
+    mem[0] = 0xffffffff815f5951; // add rsp,0x108; pop rbx; pop r12; pop r13; pop r14; pop r15; pop rbp; ret
     write(fd2, mem, 32);
 
     // getchar();
@@ -328,9 +330,55 @@ int main() {
 
 这个结构体还可以用来绕过 KPTI 保护，后面再说。
 
+另外就是，这个地方用到的抬高 `rsp` 的 gadget 怎么确定呢？首先，调试确定目标是 `add rsp, 0x138`，已知 kernel 里的 `add rsp, xxx` gadget 后面都会跟一些 `pop xxx; ret`（似乎至少 3 个），所以我们大概可以从 `add rsp, 0x120` 找起：
+1. python 执行 `enhex(asm("add rsp, 0x120"))` 得到 `4881c420010000`
+2. `ROPgadget --binary ./vmlinux --opcode 4881c420010000`，逐个在 gdb 中查看对应的汇编
+3. 成功找到 `0xffffffff816d0445` 正好是 `add rsp, 0x120; pop rbx; pop r12; pop rbp; ret`
+
+用类似的方法还可以找到很多满足条件的 gadget，毕竟第二次栈迁移只需要 0x18 字节（3 条 gadget），所以 `add rsp, 0x118` 和 `add rsp, 0x110` 之类的也许都能找到符合要求的 gadget。
+
 
 ### subprocess_info
 
-当我们在用户态执行 `socket(22, AF_INET, 0);` 时，内核调用栈如下图所示：
+这个打法应该是来自于 [CVE-2016-6187](https://duasynt.com/blog/cve-2016-6187-heap-off-by-one-exploit) 的第二部分。
 
-![subprocess]()
+
+但是，创建 `struct subprocess_info` 和调用它内部的函数指针在同一个代码路径上，所以我们需要条件竞争，在 5.11 版本之前也许我们可以使用 `userfaultfd()` 来打，但是现在已经是时代的眼泪了，所以这里先不介绍了，后面真遇到了再补吧。
+
+cve 对应的 [poc](https://github.com/vnik5287/cve-2016-6187-poc/blob/master/matreshka.c)
+
+~~当我们在用户态执行 `socket(22, AF_INET, 0);` 时，内核调用栈如下图所示：~~
+
+
+### pipe_buffer
+
+用户态执行 `pipe(pipe_fd)` 后，内核态调用过程如下图所示：
+
+![pipe_fd](https://pic1.imgdb.cn/item/68f12707c5157e1a8879a3e1.png)
+
+
+虽然 `alloc_pipe_info+229` 处调用的 `_kmalloc` 的参数是 0x280，但其实内核会给他分配一个 0x400 的 obj。
+
+`pipe` 管道创建成功后，用户态将获得两个文件描述符 `fd[2]`，其中 `fd[0]` 为从管道读，`fd[1]` 为向管道写。
+
+当用户态对管道调用 `close()` 关闭文件描述符时，调用 `free_pipe_info+82` 处将会调用 `pipe_buffer` 中的 `ops->release` 函数。
+
+```c
+struct pipe_buffer {
+	struct page *              page;                 /*     0     8 */
+	unsigned int               offset;               /*     8     4 */
+	unsigned int               len;                  /*    12     4 */
+	const struct pipe_buf_operations  * ops;         /*    16     8 */
+	unsigned int               flags;                /*    24     4 */
+	
+	/* XXX 4 bytes hole, try to pack */
+	
+	long unsigned int          private;              /*    32     8 */
+	
+	/* size: 40, cachelines: 1, members: 6 */
+	/* sum members: 36, holes: 1, sum holes: 4 */
+	/* last cacheline: 40 bytes */
+};
+```
+
+通过搜索 `anon_pipe_buf_release` 可以定位 `anon_pipe_buf_ops`。
