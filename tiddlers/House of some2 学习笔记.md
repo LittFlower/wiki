@@ -77,3 +77,4 @@ count = _IO_SYSREAD (fp, fp->_IO_buf_base,
        fp->_IO_buf_end - fp->_IO_buf_base);
 ```
 
+看了一会，好像必须得有 puts/printf 调用的 `xsgetn` 才能打，好垃圾的链子。
