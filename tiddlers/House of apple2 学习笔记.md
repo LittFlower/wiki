@@ -2,7 +2,7 @@
 
 ## 简介
 
-House of apple 是一种 Glibc >= 2.35 的高版本堆题的通杀手段，主要是通过利用 _IO_FILE 和/或 FSOP 配合拿到 shell。
+House of apple 是一种 Glibc >= 2.35 的高版本堆题的通杀手段，主要是通过利用 `struct _IO_FILE` 和/或 FSOP 配合拿到 shell。
 
 简单介绍一下：
 
