@@ -174,6 +174,8 @@ fake_wide_data = flat({
 
 ### 任意写原语2
 
+这一条链子就是 House of illusion 的攻击链。
+
 通过将 `_vtables` 减去 0x8，就能调用 `_IO_new_file_finish`
 
 ```c
