@@ -78,7 +78,7 @@ message AddressBook {
 `protoc --c_out=. demo.proto` 编译后得到 `demo.pb-c.c` 和 `demo.pb-c.h` 两个文件。
 
 
-### 逆向分析
+## 逆向分析
 
 CTF 题目通常为 C 语言编写，因此为了后续逆向工作，需要理解编译后的 C 语言文件相关结构。
 
@@ -243,12 +243,124 @@ struct ProtobufCFieldDescriptor {
 };
 ```
 
-注释里写的也很清晰了。
+注释里写的也很清晰了，需要关注的字段 `name`、`label`、`type`、`descriptor`。
 
 
 基本上在 IDA 里导入这些结构体，然后找到对应的数据段，先选中右键 `Undefined` 这些数据，然后在起始段右键 `Structure` 选择对应的结构体就可以恢复的非常清楚了。
 
 
-### 做题流程
+## 做题流程
 
-一般来讲
+### pbtk
+
+一般来讲，可以先用 pbtk 去一把梭恢复 proto 文件，似乎默认只能识别 proto3？？不清楚为什么有的 proto2 题目无法正常恢复。
+
+
+一般只需要使用 `pbtk/extractors/from_binary.py` 就可以直接梭哈。
+
+
+### 手动恢复
+
+例如说一道 proto2 题目，先依次在 IDA 导入如下结构体：
+
+
+
+```c
+enum ProtobufCLabel
+{
+  PROTOBUF_C_LABEL_REQUIRED = 0x0,      
+  PROTOBUF_C_LABEL_OPTIONAL = 0x1,    
+  PROTOBUF_C_LABEL_REPEATED = 0x2,         
+  PROTOBUF_C_LABEL_NONE = 0x3,   
+};
+
+enum ProtobufCType
+{
+  PROTOBUF_C_TYPE_INT32 = 0x0,    
+  PROTOBUF_C_TYPE_SINT32 = 0x1,   
+  PROTOBUF_C_TYPE_SFIXED32 = 0x2, 
+  PROTOBUF_C_TYPE_INT64 = 0x3,    
+  PROTOBUF_C_TYPE_SINT64 = 0x4,   
+  PROTOBUF_C_TYPE_SFIXED64 = 0x5, 
+  PROTOBUF_C_TYPE_UINT32 = 0x6,   
+  PROTOBUF_C_TYPE_FIXED32 = 0x7,  
+  PROTOBUF_C_TYPE_UINT64 = 0x8,   
+  PROTOBUF_C_TYPE_FIXED64 = 0x9,  
+  PROTOBUF_C_TYPE_FLOAT = 0xA,    
+  PROTOBUF_C_TYPE_DOUBLE = 0xB,   
+  PROTOBUF_C_TYPE_BOOL = 0xC,     
+  PROTOBUF_C_TYPE_ENUM = 0xD,     
+  PROTOBUF_C_TYPE_STRING = 0xE,   
+  PROTOBUF_C_TYPE_BYTES = 0xF,    
+  PROTOBUF_C_TYPE_MESSAGE = 0x10, 
+};
+
+struct ProtobufCMessageDescriptor {
+	uint32_t			magic;
+	const char			*name;
+	const char			*short_name;
+	const char			*c_name;
+	const char			*package_name;
+	size_t				sizeof_message;
+	unsigned			n_fields;
+	const ProtobufCFieldDescriptor	*fields;
+	const unsigned			*fields_sorted_by_name;
+	unsigned			n_field_ranges;
+	void         		*field_ranges;
+	void		        *message_init;
+	void				*reserved1;
+	void				*reserved2;
+	void				*reserved3;
+};
+
+struct ProtobufCFieldDescriptor {
+	const char		*name;
+	uint32_t		id;
+	ProtobufCLabel		label;
+	ProtobufCType		type;
+	unsigned		quantifier_offset;
+	unsigned		offset;
+	const void		*descriptor;
+	const void		*default_value;
+	uint32_t		flags;
+	unsigned		reserved_flags;
+	void			*reserved2;
+	void			*reserved3;
+};
+```
+
+把上面的结构体导入，恢复即可。
+
+以 ciscn2023 初赛的一道题目为例：
+
+![恢复结果](https://pic1.imgdb.cn/item/68fae8863203f7be00932cb2.png)
+
+从逆向结果可以得知，题目的标准结构体为 0x40 大小，有 4 个字段，字段对应的类型也很清楚，`label` 是 `required`，`type` 是 `sint64` or `bytes`。
+
+重写一个 `test.proto`，`protoc` 编译后得到 `demo.pb-c.c`，查看结构体：
+
+```c
+/* --- messages --- */
+
+struct  Devicemsg
+{
+  ProtobufCMessage base;  // ProtobufCMessage 是一个 0x18 的结构体
+  int64_t actionid;
+  int64_t msgidx;
+  int64_t msgsize;
+  ProtobufCBinaryData msgcontent;  // ProtobufCBinaryData 是一个 0x10 的结构体
+};
+
+struct ProtobufCBinaryData {
+	size_t	len;        /**< Number of bytes in the `data` field. */
+	uint8_t	*data;      /**< Data bytes. */
+};
+```
+
+然后再把以上结构体导入 IDA 进一步逆向即可。
+
+在确认结构体正确后，`protoc --python_out=. message.proto` 得到 `message_pb2.py`，然后就可以用来封装交互函数了。
+
+使用 `SerializeToString` 序列化，`ParseFromString` 反序列化。
+
+
