@@ -522,3 +522,24 @@ struct shm_file_data {
 ### msg_msg
 
 
+当你调用 System V 消息队列 API（`msgsnd`）发送消息时，内核会分配一个 `msg_msg` 结构体来存储消息头和数据。
+
+结构体如下：
+
+```c
+struct msg_msg {
+    struct list_head m_list;    // +0x00: 双向链表指针 (16 bytes)
+    long m_type;                // +0x10: 消息类型 (8 bytes)
+    size_t m_ts;                // +0x18: 消息正文的大小 (8 bytes) -> 【关键攻击点】
+    struct msg_msgseg *next;    // +0x20: 指向下一段数据的指针 (8 bytes) -> 【关键攻击点】
+    void *security;             // +0x28: 安全相关指针 (8 bytes)
+    /* 实际的消息正文紧随其后 */
+};
+```
+
+这个结构体的关键点在于：
+
+1. 头部大小 `sizeof(struct msg_msg)` = 0x30 (48字节)。
+2. 例如申请发送 100 字节的消息，内核会申请 0x30 + 100 字节的堆块。这允许我们轻松申请到任意大小的 `kmalloc-x` 堆块
+3. 如果消息大小超过一个页（4096字节），内核会使用 `msg_msgseg` 结构体将剩余数据存放在链表中。
+
