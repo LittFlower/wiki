@@ -357,7 +357,7 @@ cve 对应的 [poc](https://github.com/vnik5287/cve-2016-6187-poc/blob/master/ma
 ![pipe_fd](https://pic1.imgdb.cn/item/68f12707c5157e1a8879a3e1.png)
 
 
-虽然 `alloc_pipe_info+229` 处调用的 `_kmalloc` 的参数是 0x280，但其实内核会给他分配一个 0x400 的 obj。
+虽然 `alloc_pipe_info+229` 处调用的 `_kmalloc` 的参数是 0x280，但其实内核会给他分配一个 0x400 也就是 1k 大小的 obj。
 
 `pipe` 管道创建成功后，用户态将获得两个文件描述符 `fd[2]`，其中 `fd[0]` 为从管道读，`fd[1]` 为向管道写。
 
