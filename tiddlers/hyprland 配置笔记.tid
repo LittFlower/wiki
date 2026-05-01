@@ -1,0 +1,28 @@
+created: 20260501192119530
+creator: LittFlower
+modified: 20260501192615321
+modifier: LittFlower
+tags: 日志 Linux
+title: hyprland 配置笔记
+type: text/markdown
+
+
+## pwn exp 调试
+
+需求：调试 exp 时把新弹出的 gdb 窗口放大，这样最舒服
+
+解决方案：
+
+
+- pwntools 的全局终端入口放在 /home/flower/.pwn.conf：
+
+```
+[context]
+terminal = ['/home/flower/.config/hypr/scripts/pwntools-gdb-launch']
+```
+
+- 全局 launcher 放在 `/home/flower/.config/hypr/scripts/pwntools-gdb-launch`。
+- Hyprland 平铺状态切换逻辑放在 `/home/flower/.config/hypr/scripts/pwntools-gdb-layout-helper.py`。
+
+
+
