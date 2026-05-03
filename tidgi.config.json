@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "$schema": "https://raw.githubusercontent.com/tiddly-gittly/TidGi-Desktop/master/src/services/workspaces/tidgi.config.schema.json",
+  "id": "9_Tm2GBu5zCDQ8JQiQ6df",
+  "name": "wiki",
+  "gitUrl": "https://github.com/LittFlower/wiki",
+  "storageService": "github",
+  "userName": "LittFlower",
+  "enableHTTPAPI": true
+}

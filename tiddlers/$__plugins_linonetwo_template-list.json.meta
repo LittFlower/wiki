@@ -1,10 +1,11 @@
+Modern.TiddlyDev#SHA256-Hashed: bac1e69e0df8debdb1021482498245d96ab9346ce4ee61aed0d64beddd5474ac
 author: LinOnetwo
 core-version: >=5.1.22
 dependents: 
 description: Show a list of template when you create a new tiddler 在新建太微条目时展示一系列可用模板
-list: Readme Readme-zh_CN
+list: Readme tree
 name: Template List 太微模板列表
 plugin-type: plugin
 title: $:/plugins/linonetwo/template-list
 type: application/json
-version: 0.2.1
+version: 0.3.0
