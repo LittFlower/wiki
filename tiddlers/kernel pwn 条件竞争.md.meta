@@ -2,5 +2,7 @@ created: 20251016071239546
 creator: LittFlower
 modified: 20251016164418762
 modifier: LittFlower
+revision: 0
+tags: Pwn [[Linux Kernel]]
 title: kernel pwn 条件竞争
 type: text/markdown

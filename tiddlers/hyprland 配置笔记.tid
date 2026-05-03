@@ -1,8 +1,8 @@
 created: 20260501192119530
 creator: LittFlower
-modified: 20260501192615321
+modified: 20260503204409346
 modifier: LittFlower
-tags: 日志 Linux
+tags: 日志 [[Linux Userspace]]
 title: hyprland 配置笔记
 type: text/markdown
 
@@ -23,6 +23,11 @@ terminal = ['/home/flower/.config/hypr/scripts/pwntools-gdb-launch']
 
 - 全局 launcher 放在 `/home/flower/.config/hypr/scripts/pwntools-gdb-launch`。
 - Hyprland 平铺状态切换逻辑放在 `/home/flower/.config/hypr/scripts/pwntools-gdb-layout-helper.py`。
+
+
+## terminal 弹出新终端
+
+新增脚本：`.config/hypr/UserScripts/TerminalHere.sh`，用当前 workspace 中最新 kitty 终端的 cwd 启动新 kitty
 
 
 

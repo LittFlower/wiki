@@ -2,6 +2,7 @@ created: 20250925070222426
 creator: LittFlower
 modified: 20250926060753706
 modifier: LittFlower
-tags: 二进制知识 汇编 日志 [[linux kernel]] Pwn
+revision: 0
+tags: 二进制知识 汇编 日志 [[Linux Kernel]] Pwn
 title: eBPF in C 语法
 type: text/markdown

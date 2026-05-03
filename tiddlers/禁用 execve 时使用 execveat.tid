@@ -2,8 +2,9 @@ created: 20250203161005984
 creator: LittFlower
 modified: 20250205104557910
 modifier: LittFlower
-tags: 二进制漏洞利用技术 Pwn Linux
+tags: Pwn [[Linux Userspace]]
 title: 禁用 execve 时使用 execveat
+type: text/vnd.tiddlywiki
 
 当沙箱禁用系统调用 execve，往往会想到去用 execveat，但是有的时候会发现 execveat 也无法调用，这是为什么呢？
 

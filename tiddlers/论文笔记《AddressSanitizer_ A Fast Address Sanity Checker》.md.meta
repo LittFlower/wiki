@@ -3,6 +3,7 @@ creator: LittFlower
 icon: 📒
 modified: 20241021152156078
 modifier: LittFlower
-tags: 二进制漏洞利用技术 Pwn 论文笔记
+revision: 0
+tags: Pwn 论文笔记
 title: 论文笔记《AddressSanitizer: A Fast Address Sanity Checker》
 type: text/markdown

@@ -2,6 +2,7 @@ created: 20241213071722560
 creator: LittFlower
 modified: 20241219101455865
 modifier: LittFlower
-tags: C Glibc Linux
+revision: 0
+tags: C Glibc [[Linux Userspace]]
 title: 编译为动态链接库
 type: text/markdown

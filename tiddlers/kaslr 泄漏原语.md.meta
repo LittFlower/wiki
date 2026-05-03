@@ -2,6 +2,6 @@ created: 20260430181244718
 creator: LittFlower
 modified: 20260430184039951
 modifier: LittFlower
-tags: 二进制漏洞利用技术 [[linux kernel]] Pwn
+tags: [[Linux Kernel]] Pwn
 title: kaslr 泄漏原语
 type: text/markdown

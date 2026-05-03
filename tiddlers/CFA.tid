@@ -2,8 +2,10 @@ created: 20240905114117790
 creator: LittFlower
 modified: 20240909113554621
 modifier: LittFlower
-tags: 二进制知识 Linux 异常处理
+revision: 0
+tags: 二进制知识 [[Linux Userspace]] 异常处理
 title: CFA
+type: text/vnd.tiddlywiki
 
 CFA (Canonical Frame Address): 通常指向当前栈帧的基址，用于在异常处理期间找到返回地址和局部变量。
 

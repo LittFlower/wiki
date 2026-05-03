@@ -2,6 +2,7 @@ created: 20241205121853052
 creator: LittFlower
 modified: 20250314140602066
 modifier: LittFlower
-tags: 二进制知识 Linux Glibc Pwn
+revision: 0
+tags: 二进制知识 [[Linux Userspace]] Glibc Pwn
 title: ptmalloc2 malloc/free 流程
 type: text/markdown

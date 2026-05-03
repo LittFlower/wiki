@@ -2,6 +2,7 @@ created: 20241023102423887
 creator: LittFlower
 modified: 20241204063533415
 modifier: LittFlower
-tags: 二进制知识 Linux Glibc
+revision: 0
+tags: 二进制知识 [[Linux Userspace]] Glibc
 title: glibc malloc/free/realloc 执行流程
 type: text/markdown

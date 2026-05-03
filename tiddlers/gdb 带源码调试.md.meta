@@ -2,6 +2,6 @@ created: 20241130062757915
 creator: LittFlower
 modified: 20241130063116882
 modifier: LittFlower
-tags: 二进制漏洞利用技术 Linux Pwn
+tags: [[Linux Userspace]] Pwn
 title: gdb 带源码调试
 type: text/markdown

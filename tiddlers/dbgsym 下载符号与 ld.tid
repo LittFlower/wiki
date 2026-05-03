@@ -2,8 +2,9 @@ created: 20241130064406000
 creator: LittFlower
 modified: 20241130064906765
 modifier: LittFlower
-tags: 二进制漏洞利用技术 Pwn Linux Glibc
+tags: Pwn [[Linux Userspace]] Glibc
 title: dbgsym 下载符号与 ld
+type: text/vnd.tiddlywiki
 
 ```python
 #!/usr/bin/env -vS python3

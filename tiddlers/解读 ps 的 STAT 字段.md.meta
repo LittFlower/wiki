@@ -2,6 +2,7 @@ created: 20250203160731795
 creator: LittFlower
 modified: 20250203160813156
 modifier: LittFlower
-tags: 二进制知识 计算机教育中缺失的一课 Linux Pwn
+revision: 0
+tags: 二进制知识 计算机教育中缺失的一课 [[Linux Userspace]] Pwn
 title: 解读 ps 的 STAT 字段
 type: text/markdown
