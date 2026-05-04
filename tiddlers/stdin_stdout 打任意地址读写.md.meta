@@ -3,6 +3,6 @@ creator: LittFlower
 modified: 20250507162946788
 modifier: LittFlower
 revision: 0
-tags: Pwn Glibc 想法
+tags: Pwn Glibc 想法 [[Heap Exploitation]]
 title: stdin/stdout 打任意地址读写
 type: text/markdown

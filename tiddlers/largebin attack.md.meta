@@ -3,6 +3,6 @@ creator: LittFlower
 modified: 20250922094646946
 modifier: LittFlower
 revision: 0
-tags: Pwn Glibc C
+tags: Pwn Glibc C [[Heap Exploitation]]
 title: largebin attack
 type: text/markdown

@@ -2,6 +2,7 @@ created: 20241213071850934
 creator: LittFlower
 modified: 20241213072133101
 modifier: LittFlower
-tags: C [[Linux Userspace]] Glibc Python
+revision: 0
+tags: C [[Linux Userspace]] Glibc ELF
 title: python 调用动态链接库
 type: text/markdown

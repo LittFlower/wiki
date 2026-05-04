@@ -2,7 +2,8 @@ created: 20250203161005984
 creator: LittFlower
 modified: 20250205104557910
 modifier: LittFlower
-tags: Pwn [[Linux Userspace]]
+revision: 0
+tags: Pwn [[Linux Userspace]] Shellcode Syscall
 title: 禁用 execve 时使用 execveat
 type: text/vnd.tiddlywiki
 

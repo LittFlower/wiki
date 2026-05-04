@@ -3,6 +3,6 @@ creator: LittFlower
 modified: 20241215161840735
 modifier: LittFlower
 revision: 0
-tags: 二进制知识 Glibc [[Linux Userspace]] Pwn
+tags: 二进制知识 Glibc [[Linux Userspace]] Pwn [[Pwn Tooling]]
 title: glibc 版本与 ubuntu 发行版号（大致）
 type: text/markdown

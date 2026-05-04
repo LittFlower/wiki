@@ -3,6 +3,6 @@ creator: LittFlower
 modified: 20240905114104514
 modifier: LittFlower
 revision: 0
-tags: C++ 异常处理 Pwn 栈溢出
+tags: C++ 异常处理 Pwn 栈溢出 [[C++ ABI]]
 title: 溢出漏洞在 C++ 异常处理中的利用
 type: text/markdown

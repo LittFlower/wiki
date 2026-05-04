@@ -2,6 +2,7 @@ created: 20250916164813832
 creator: LittFlower
 modified: 20250916165212268
 modifier: LittFlower
-tags: 二进制知识 [[Linux Userspace]] Pwn
+revision: 0
+tags: 二进制知识 [[Linux Userspace]] Pwn Shellcode
 title: shellcode 之 aio
 type: text/markdown

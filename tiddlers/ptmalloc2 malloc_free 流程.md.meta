@@ -3,6 +3,6 @@ creator: LittFlower
 modified: 20250314140602066
 modifier: LittFlower
 revision: 0
-tags: 二进制知识 [[Linux Userspace]] Glibc Pwn
+tags: 二进制知识 [[Linux Userspace]] Glibc Pwn [[Heap Exploitation]]
 title: ptmalloc2 malloc/free 流程
 type: text/markdown

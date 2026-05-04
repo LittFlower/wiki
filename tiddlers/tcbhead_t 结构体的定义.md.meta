@@ -2,6 +2,7 @@ created: 20250320063916175
 creator: LittFlower
 modified: 20250320063950445
 modifier: LittFlower
-tags: Glibc [[Linux Userspace]] Pwn
+revision: 0
+tags: Glibc [[Linux Userspace]] Pwn [[Heap Exploitation]]
 title: tcbhead_t 结构体的定义
 type: text/markdown

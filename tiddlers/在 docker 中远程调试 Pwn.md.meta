@@ -2,6 +2,7 @@ created: 20251009094619730
 creator: LittFlower
 modified: 20251009101449952
 modifier: LittFlower
-tags: 工作流 日志 [[Linux Userspace]] Pwn
+revision: 0
+tags: 工作流 日志 [[Linux Userspace]] Pwn [[Pwn Tooling]]
 title: 在 docker 中远程调试 Pwn
 type: text/markdown

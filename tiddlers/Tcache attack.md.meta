@@ -2,6 +2,7 @@ created: 20241203115142490
 creator: LittFlower
 modified: 20250312162413042
 modifier: LittFlower
-tags: Glibc Pwn [[Linux Userspace]]
+revision: 0
+tags: Glibc Pwn [[Linux Userspace]] [[Heap Exploitation]]
 title: Tcache attack
 type: text/markdown

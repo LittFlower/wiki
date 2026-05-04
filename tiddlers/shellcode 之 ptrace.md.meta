@@ -2,6 +2,7 @@ created: 20250225132134111
 creator: LittFlower
 modified: 20250409084534790
 modifier: LittFlower
-tags: Pwn [[Linux Userspace]] Glibc C
+revision: 0
+tags: Pwn [[Linux Userspace]] Glibc C Shellcode
 title: shellcode 之 ptrace
 type: text/markdown

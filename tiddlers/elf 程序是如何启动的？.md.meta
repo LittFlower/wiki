@@ -3,6 +3,6 @@ creator: LittFlower
 modified: 20250320065754262
 modifier: LittFlower
 revision: 0
-tags: 二进制知识 C CSAPP Glibc Pwn [[Linux Userspace]]
+tags: 二进制知识 C CSAPP Glibc Pwn [[Linux Userspace]] ELF
 title: elf 程序是如何启动的？
 type: text/markdown

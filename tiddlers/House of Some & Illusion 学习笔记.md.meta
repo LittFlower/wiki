@@ -2,6 +2,7 @@ created: 20251021062451760
 creator: LittFlower
 modified: 20251022065028151
 modifier: LittFlower
-tags: 二进制知识 Pwn [[Linux Userspace]]
+revision: 0
+tags: 二进制知识 Pwn [[Linux Userspace]] [[Heap Exploitation]]
 title: House of Some & Illusion 学习笔记
 type: text/markdown

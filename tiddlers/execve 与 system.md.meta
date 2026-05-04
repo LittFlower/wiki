@@ -2,6 +2,7 @@ created: 20250202165818783
 creator: LittFlower
 modified: 20250205084917919
 modifier: LittFlower
-tags: 想法 Pwn [[Linux Userspace]]
+revision: 0
+tags: 想法 Pwn [[Linux Userspace]] Shellcode Syscall
 title: execve 与 system
 type: text/markdown

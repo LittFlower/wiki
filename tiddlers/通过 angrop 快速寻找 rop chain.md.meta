@@ -3,6 +3,6 @@ creator: LittFlower
 modified: 20251227093016424
 modifier: LittFlower
 revision: 0
-tags: 从零开始的Pwner生活 Pwn 日志
+tags: 从零开始的Pwner生活 Pwn 日志 ROP
 title: 通过 angrop 快速寻找 rop chain
 type: text/markdown

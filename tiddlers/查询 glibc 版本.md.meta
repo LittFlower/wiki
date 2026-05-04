@@ -2,6 +2,7 @@ created: 20241130040829070
 creator: LittFlower
 modified: 20241207155814579
 modifier: LittFlower
-tags: Pwn [[Linux Userspace]]
+revision: 0
+tags: Pwn [[Linux Userspace]] [[Pwn Tooling]]
 title: 查询 glibc 版本
 type: text/markdown

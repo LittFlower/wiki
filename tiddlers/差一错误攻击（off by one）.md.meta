@@ -3,6 +3,6 @@ creator: LittFlower
 modified: 20250312055703614
 modifier: LittFlower
 revision: 0
-tags: 二进制知识 Glibc Pwn
+tags: 二进制知识 Glibc Pwn [[Heap Exploitation]]
 title: 差一错误攻击（off by one）
 type: text/markdown

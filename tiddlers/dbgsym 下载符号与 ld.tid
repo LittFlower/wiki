@@ -2,7 +2,8 @@ created: 20241130064406000
 creator: LittFlower
 modified: 20241130064906765
 modifier: LittFlower
-tags: Pwn [[Linux Userspace]] Glibc
+revision: 0
+tags: Pwn [[Linux Userspace]] Glibc [[Pwn Tooling]] ELF
 title: dbgsym 下载符号与 ld
 type: text/vnd.tiddlywiki
 

@@ -2,6 +2,7 @@ created: 20250221051427217
 creator: LittFlower
 modified: 20251129043750360
 modifier: LittFlower
-tags: Glibc Pwn [[Linux Userspace]]
+revision: 0
+tags: Glibc Pwn [[Linux Userspace]] [[Heap Exploitation]]
 title: House of apple2 学习笔记
 type: text/markdown

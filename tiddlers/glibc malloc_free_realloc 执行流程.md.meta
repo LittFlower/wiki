@@ -3,6 +3,6 @@ creator: LittFlower
 modified: 20241204063533415
 modifier: LittFlower
 revision: 0
-tags: 二进制知识 [[Linux Userspace]] Glibc
+tags: 二进制知识 [[Linux Userspace]] Glibc [[Heap Exploitation]]
 title: glibc malloc/free/realloc 执行流程
 type: text/markdown

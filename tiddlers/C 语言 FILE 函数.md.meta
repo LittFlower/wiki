@@ -3,6 +3,6 @@ creator: LittFlower
 modified: 20241114062713700
 modifier: LittFlower
 revision: 0
-tags: C Glibc Pwn 二进制知识
+tags: C Glibc Pwn 二进制知识 [[Heap Exploitation]]
 title: C 语言 FILE 函数
 type: text/markdown

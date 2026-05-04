@@ -2,6 +2,7 @@ created: 20250407031840647
 creator: LittFlower
 modified: 20250407093131744
 modifier: LittFlower
-tags: C Glibc [[Linux Userspace]] Pwn
+revision: 0
+tags: C Glibc [[Linux Userspace]] Pwn [[Heap Exploitation]]
 title: house of water
 type: text/markdown

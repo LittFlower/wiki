@@ -2,6 +2,7 @@ created: 20241130063141441
 creator: LittFlower
 modified: 20241130064033576
 modifier: LittFlower
-tags: Pwn [[Linux Userspace]]
+revision: 0
+tags: Pwn [[Linux Userspace]] ROP
 title: cyclic 的使用
 type: text/markdown
