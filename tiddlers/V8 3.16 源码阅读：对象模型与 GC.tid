@@ -1,0 +1,128 @@
+created: 20260505171834000
+creator: LittFlower
+modified: 20260505171834000
+modifier: LittFlower
+tags: V8 源码阅读 GC
+title: V8 3.16 源码阅读：对象模型与 GC
+type: text/vnd.tiddlywiki
+
+!! 目标
+
+这篇笔记记录阅读 V8 `3.16.0` 源码的路线，先只关注两条主线：
+
+# 学习对象基本模型
+# 学习 GC
+
+`3.16.0` 适合建立旧 V8 的核心模型：对象布局、Map/HiddenClass、属性描述符、transition、属性查找、堆空间、分代 GC、标记压缩、写屏障。不要把这版的实现细节直接外推到现代 V8；现代 V8 的执行管线、对象布局、GC、指针压缩和 sandbox 都有明显变化。
+
+!! 1. 对象基本模型
+
+!!! 先建立的问题
+
+# 一个 JavaScript value 在 V8 里如何表示？
+# `Smi` 和 `HeapObject` 怎么区分？
+# `JSObject` 对象头里有哪些关键字段？
+# `map`、`properties`、`elements` 分别负责什么？
+# `Map` 为什么可以理解为 HiddenClass？
+# fast properties 和 dictionary properties 的区别是什么？
+# 添加属性时，Map transition 如何发生？
+# 属性读取时，V8 如何沿 receiver、map、descriptor、prototype chain 查找？
+
+!!! 阅读顺序
+
+# `src/objects.h`：先读 `Object`、`Smi`、`HeapObject`、`JSReceiver`、`JSObject`、`Map`、`DescriptorArray` 的类定义。
+# `src/objects-inl.h`：补上对象字段访问器、tag 判断、map/properties/elements 的 inline 访问逻辑。
+# `src/property.h` 和 `src/property-details.h`：理解 `Descriptor`、`LookupResult`、`PropertyDetails`。
+# `src/transitions.h` 和 `src/transitions.cc`：理解 `TransitionArray` 如何保存形状变化。
+# `src/objects.cc`：围绕 `JSObject::Lookup`、`Map::Copy*`、`JSObject::SetProperty*`、`NormalizeProperties`、`MigrateToMap` 读调用链。
+
+!!! 阅读方法
+
+# 先画一个最小对象布局：`JSObject -> Map -> DescriptorArray`，再补上 `properties` 和 `elements`。
+# 用一个 JS 例子追踪形状变化：`let o = {}; o.a = 1; o.b = 2; delete o.a;`。
+# 每次看到 property access，都问三个问题：属性名在哪里？属性值在哪里？属性元数据在哪里？
+# 遇到 fast/dictionary 分支时，先记录触发条件，不要急着读完所有边界情况。
+# 读源码时优先跟字段和数据结构关系，再跟慢路径函数；不要一开始陷入所有 builtin/runtime 分支。
+
+!! 2. GC
+
+!!! 先建立的问题
+
+# V8 堆被分成哪些 space？
+# new space 和 old space 的对象生命周期有什么区别？
+# allocation failure 后会触发什么路径？
+# Scavenge 如何复制新生代对象？
+# Mark-Compact 如何标记、清理、压缩老生代对象？
+# 根集合从哪里来？
+# 写屏障和 store buffer 为什么需要？
+# incremental marking 如何把一次大 GC 拆成多步？
+
+!!! 阅读顺序
+
+# `src/spaces.h` 和 `src/spaces.cc`：先读 space 抽象、page/chunk、new space、old pointer/data/code/map/lo space。
+# `src/heap.h` 和 `src/heap.cc`：读 allocation、GC 入口、heap 初始化、根对象、空间之间的协调。
+# `src/factory.cc`：把对象创建和 heap allocation 联系起来。
+# `src/mark-compact.h` 和 `src/mark-compact.cc`：读老生代 mark-sweep/mark-compact 主流程。
+# `src/incremental-marking.h` 和 `src/incremental-marking.cc`：理解 incremental marking 状态机。
+# `src/store-buffer.h` 和 `src/store-buffer.cc`：理解老对象指向新对象时为什么需要 remembered set。
+# `src/objects-visiting.h`、`src/objects-visiting.cc`、`src/objects-visiting-inl.h`：理解对象扫描和 visitor 机制。
+
+!!! 阅读方法
+
+# 先画 heap space 总图，再读具体 GC 算法。
+# 从 `Heap::CollectGarbage` 一类入口向下追，不要从所有 helper 函数平铺阅读。
+# 分开记录 minor GC 和 major GC：触发条件、处理对象范围、是否移动对象、如何更新引用。
+# 读写屏障时，重点理解跨代引用问题：old object -> new object。
+# 读压缩时，重点理解 forwarding address、对象移动、slot 更新三件事。
+# 读 incremental marking 时，重点理解 mutator 和 marker 并发/交错带来的不变量维护。
+
+!! 参考文章
+
+!!! 对象模型 / HiddenClass / 属性
+
+# V8 官方：Fast properties in V8
+https://v8.dev/blog/fast-properties
+
+# V8 官方：Elements kinds in V8
+https://v8.dev/blog/elements-kinds
+
+# V8 官方：Maps, Shapes, and Inline Caches
+https://v8.dev/docs/hidden-classes
+
+# Mathias Bynens：JavaScript engine fundamentals: Shapes and Inline Caches
+https://mathiasbynens.be/notes/shapes-ics
+
+!!! GC
+
+# V8 官方：Trash talk: the Orinoco garbage collector
+https://v8.dev/blog/trash-talk
+
+# V8 官方：Orinoco: young generation garbage collection
+https://v8.dev/blog/orinoco-parallel-scavenger
+
+# V8 官方：Concurrent marking in V8
+https://v8.dev/blog/concurrent-marking
+
+# V8 官方：High-performance garbage collection for C++
+https://v8.dev/blog/high-performance-cpp-gc
+
+!! 注意
+
+官方 GC 文章大多讲的是更现代的 V8，适合作为概念背景，不要直接拿文章里的类名和 `3.16.0` 一一对应。读 `3.16.0` 时以源码为准，文章用于理解算法动机和术语。
+
+!! 后续记录模板
+
+!!! 今日阅读
+
+# 文件：
+# 函数：
+# 关键结构：
+# 新理解：
+# 疑问：
+
+!!! 源码关系
+
+# 数据结构：
+# 入口函数：
+# 关键不变量：
+# 和 JS 行为的对应关系：
