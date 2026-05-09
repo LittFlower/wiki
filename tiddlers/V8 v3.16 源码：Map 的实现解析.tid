@@ -1,27 +1,33 @@
 caption: V8 v3.16 Map 实现解析
+created: 20260509135409000
+creator: LittFlower
+modified: 20260509135617000
+modifier: LittFlower
 source-repo: /home/flower/ctf/problem/v8
 tags: V8 v8-3.16 源码阅读 hidden-class Map
 title: V8 v3.16 源码：Map 的实现解析
-type: text/vnd.tiddlywiki
+type: text/markdown
 
-!! 结论
+# V8 v3.16 源码：Map 的实现解析
+
+## 结论
 
 在 V8 v3.16 这份源码中，`Map` 不是 JavaScript 里的 `Map` 容器，而是 V8 的隐藏类 / shape / 结构描述符。每个 `HeapObject` 的首 word 都是 map word，普通运行时它指向一个 `Map` 对象。`Map` 决定对象的运行时类型、实例大小、属性布局、元素布局、prototype、constructor、descriptor、transition tree 和 IC code cache。
 
 核心源码位置：
 
-* `src/objects.h:1356-1448`：`HeapObject` 定义，首字段是 `map`。
-* `src/objects.h:5034-5635`：`class Map` 定义和 Map 自身布局。
-* `src/objects-inl.h:1202-1228`：`HeapObject::map()` / `set_map()` / `map_word()`。
-* `src/objects-inl.h:3273-3381`：`Map` 的 instance size、in-object properties、instance type 等访问器。
-* `src/objects.cc:1594-1668`：新增 fast property 时创建新 Map 并迁移对象。
-* `src/objects.cc:5343-5575`：Map copy、descriptor 共享和 transition 构造。
+- `src/objects.h:1356-1448`：`HeapObject` 定义，首字段是 `map`。
+- `src/objects.h:5034-5635`：`class Map` 定义和 Map 自身布局。
+- `src/objects-inl.h:1202-1228`：`HeapObject::map()` / `set_map()` / `map_word()`。
+- `src/objects-inl.h:3273-3381`：`Map` 的 instance size、in-object properties、instance type 等访问器。
+- `src/objects.cc:1594-1668`：新增 fast property 时创建新 Map 并迁移对象。
+- `src/objects.cc:5343-5575`：Map copy、descriptor 共享和 transition 构造。
 
-!! 1. HeapObject 的第一个 word 是 Map
+## 1. HeapObject 的第一个 word 是 Map
 
 `HeapObject` 的定义说明所有堆对象都有一个 map：
 
-{{{
+```cpp
 class HeapObject: public Object {
  public:
   inline Map* map();
@@ -31,13 +37,13 @@ class HeapObject: public Object {
   static const int kMapOffset = Object::kHeaderSize;
   static const int kHeaderSize = kMapOffset + kPointerSize;
 };
-}}}
+```
 
 源码：`src/objects.h:1356-1448`。
 
 访问器实现：
 
-{{{
+```cpp
 Map* HeapObject::map() {
   return map_word().ToMap();
 }
@@ -50,46 +56,47 @@ void HeapObject::set_map(Map* value) {
 MapWord HeapObject::map_word() {
   return MapWord(reinterpret_cast<uintptr_t>(READ_FIELD(this, kMapOffset)));
 }
-}}}
+```
 
 源码：`src/objects-inl.h:1202-1228`。
 
 所以一个普通堆对象的最小形态是：
 
-{{{
+```text
 HeapObject:
   +0  map word  -> Map
   ... body fields ...
-}}}
+```
 
 注意：GC 期间 map word 不一定真的是 `Map*`，可能临时保存 forwarding address，所以源码里还有 `MapWord` 抽象。
 
-!! 2. Map 是隐藏类，不是对象本体
+## 2. Map 是隐藏类，不是对象本体
 
 `Map` 的源码注释写得很直接：
 
-{{{
+```cpp
 // All heap objects have a Map that describes their structure.
 //  A Map contains information about:
 //  - Size information about the object
 //  - How to iterate over an object (for garbage collection)
 class Map: public HeapObject {
-}}}
+}
+```
 
 源码：`src/objects.h:5034-5038`。
 
 这意味着：
 
-* `JSObject` 本体保存属性值 backing store、elements 等数据。
-* `Map` 保存“如何解释这个对象”的元信息。
-* 两个对象如果形状一致，可以共享同一个 `Map`。
-* 新增属性、改变 elements kind、改变 prototype 等操作通常会让对象切换到另一个 `Map`。
+- `JSObject` 本体保存属性值 backing store、elements 等数据。
+- `Map` 保存“如何解释这个对象”的元信息。
+- 两个对象如果形状一致，可以共享同一个 `Map`。
+- 新增属性、改变 elements kind、改变 prototype 等操作通常会让对象切换到另一个 `Map`。
 
-!! 3. Map 自身的内存布局
+## 3. Map 自身的内存布局
 
 `Map` 本身也是 `HeapObject`，所以它自己也有一个 map word。其后才是 Map 的字段：
 
-{{{
+```text
 Map:
   +0                          map word
   +kInstanceSizesOffset        instance sizes word
@@ -100,13 +107,13 @@ Map:
   +kDescriptorsOffset          instance_descriptors
   +kCodeCacheOffset            code_cache
   +kBitField3Offset            bit_field3
-}}}
+```
 
 源码：`src/objects.h:5549-5568`。
 
 其中两个 word 被拆成 byte 字段：
 
-{{{
+```text
 kInstanceSizesOffset:
   byte 0: instance_size
   byte 1: inobject_properties
@@ -118,49 +125,49 @@ kInstanceAttributesOffset:
   byte 1: unused_property_fields
   byte 2: bit_field
   byte 3: bit_field2
-}}}
+```
 
 源码：`src/objects.h:5576-5591`。
 
 `Map::instance_size()` 的实现会把 byte 值左移成字节大小：
 
-{{{
+```cpp
 int Map::instance_size() {
   return READ_BYTE_FIELD(this, kInstanceSizeOffset) << kPointerSizeLog2;
 }
-}}}
+```
 
 源码：`src/objects-inl.h:3286-3290`。
 
 这解释了为什么旧版 V8 里有 `kMaxInstanceSize = 255 * kPointerSize` 这种限制：实例大小被压缩在一个 byte 里。
 
-!! 4. Map 描述 JSObject 的属性布局
+## 4. Map 描述 JSObject 的属性布局
 
 普通 `JSObject` 的固定头在 `objects.h` 中是：
 
-{{{
+```cpp
 static const int kPropertiesOffset = HeapObject::kHeaderSize;
 static const int kElementsOffset = kPropertiesOffset + kPointerSize;
 static const int kHeaderSize = kElementsOffset + kPointerSize;
-}}}
+```
 
 源码：`src/objects.h:2431-2436`。
 
 所以普通 `JSObject` 大概是：
 
-{{{
+```text
 JSObject:
   +0                 map
   +kPointerSize      properties
   +2*kPointerSize    elements
   +kHeaderSize       后续对象体
-}}}
+```
 
 后续对象体里可能有 internal fields，也可能有 in-object properties。in-object properties 的数量不在 `JSObject` 类里逐个声明，而是由 `Map::inobject_properties()` 决定。
 
 访问 fast property 的关键代码：
 
-{{{
+```cpp
 Object* JSObject::FastPropertyAt(int index) {
   index -= map()->inobject_properties();
   if (index < 0) {
@@ -170,47 +177,47 @@ Object* JSObject::FastPropertyAt(int index) {
     return properties()->get(index);
   }
 }
-}}}
+```
 
 源码：`src/objects-inl.h:1669-1686`。
 
 解释：
 
-* descriptor 给出的是 field index。
-* 前 `map()->inobject_properties()` 个 field 存在对象内部。
-* 超出的 field 存在 `properties()` 这个 `FixedArray` backing store。
-* in-object property 从对象尾部倒推 offset：`map()->instance_size() + index * kPointerSize`，其中这里的 `index` 已经是负数。
+- descriptor 给出的是 field index。
+- 前 `map()->inobject_properties()` 个 field 存在对象内部。
+- 超出的 field 存在 `properties()` 这个 `FixedArray` backing store。
+- in-object property 从对象尾部倒推 offset：`map()->instance_size() + index * kPointerSize`，其中这里的 `index` 已经是负数。
 
-!! 5. DescriptorArray：属性名到 field index 的映射
+## 5. DescriptorArray：属性名到 field index 的映射
 
 `Map` 通过 `instance_descriptors()` 指向 `DescriptorArray`：
 
-{{{
+```cpp
 DECL_ACCESSORS(instance_descriptors, DescriptorArray)
-}}}
+```
 
 源码：`src/objects.h:5281-5285`。
 
 `Descriptor` 是 fast properties 的属性描述项。源码中 `property.h` 说明：
 
-{{{
+```text
 Descriptor:
   key_     : 属性名
   value_   : FIELD 时是 Smi(field_index)
              CONSTANT_FUNCTION 时是 JSFunction
              CALLBACKS 时是 callback/accessor 数据
   details_ : PropertyDetails
-}}}
+```
 
 源码：`src/property.h:41-151`。
 
 `DescriptorArray::GetFieldIndex()` 直接把 value 槽解释为 `Smi(field_index)`：
 
-{{{
+```cpp
 int DescriptorArray::GetFieldIndex(int descriptor_number) {
   return Descriptor::IndexFromValue(GetValue(descriptor_number));
 }
-}}}
+```
 
 源码：`src/objects-inl.h:2292-2295`。
 
@@ -218,171 +225,171 @@ int DescriptorArray::GetFieldIndex(int descriptor_number) {
 
 所以 fast named property 的查找链是：
 
-{{{
+```text
 name
   -> object->map()
   -> map->instance_descriptors()
   -> descriptor_number
   -> descriptor.value = Smi(field_index)
   -> JSObject::FastPropertyAt(field_index)
-}}}
+```
 
-!! 6. 新增属性会产生 Map transition
+## 6. 新增属性会产生 Map transition
 
 例如：
 
-{{{
+```js
 let o = {};
 o.a = 1;
 o.b = 2;
-}}}
+```
 
 V8 不希望每个对象都重新计算属性布局，而是维护 Map transition tree：
 
-{{{
+```text
 empty_map
   -- add "a" --> map_a
   -- add "b" --> map_ab
-}}}
+```
 
 `JSObject::AddFastProperty` 展示了这个过程：
 
-{{{
+```cpp
 int index = map()->NextFreePropertyIndex();
 FieldDescriptor new_field(name, index, attributes, 0);
 MaybeObject* maybe_new_map = map()->CopyAddDescriptor(&new_field, flag);
 ...
 set_map(new_map);
 return FastPropertyAtPut(index, value);
-}}}
+```
 
 源码：`src/objects.cc:1594-1668`。
 
 这段代码的核心步骤：
 
-* 计算新属性的 field index。
-* 创建 `FieldDescriptor`，descriptor 只保存 index，不保存值。
-* `CopyAddDescriptor` 创建或复用新 Map。
-* `set_map(new_map)` 把对象迁移到新隐藏类。
-* `FastPropertyAtPut(index, value)` 把真实属性值写入对象。
+- 计算新属性的 field index。
+- 创建 `FieldDescriptor`，descriptor 只保存 index，不保存值。
+- `CopyAddDescriptor` 创建或复用新 Map。
+- `set_map(new_map)` 把对象迁移到新隐藏类。
+- `FastPropertyAtPut(index, value)` 把真实属性值写入对象。
 
 `Map` 的 transition 接口定义在 `src/objects.h:5229-5243`：
 
-{{{
+```cpp
 HasTransitionArray()
 AddTransition(...)
 GetTransition(...)
 SetTransition(...)
-}}}
+```
 
-!! 7. Map copy 与 descriptor 共享
+## 7. Map copy 与 descriptor 共享
 
 Map transition 背后的实现集中在 `objects.cc`：
 
-* `Map::RawCopy`：复制 Map 的基础字段，但不复制 descriptors/transitions/code cache。源码：`src/objects.cc:5343-5361`。
-* `Map::CopyDropDescriptors`：复制 Map 并丢弃 descriptor ownership/transition 状态。源码：`src/objects.cc:5395-5410`。
-* `Map::ShareDescriptor`：当前 Map 拥有 descriptors 时，把新 descriptor append 到同一个 DescriptorArray，并让子 Map 看更长前缀。源码：`src/objects.cc:5413-5490`。
-* `Map::CopyReplaceDescriptors`：用指定 DescriptorArray 创建新 Map，并按需插入 transition。源码：`src/objects.cc:5493-5521`。
-* `Map::CopyAsElementsKind`：创建 elements kind 不同的新 Map。源码：`src/objects.cc:5524-5575`。
+- `Map::RawCopy`：复制 Map 的基础字段，但不复制 descriptors/transitions/code cache。源码：`src/objects.cc:5343-5361`。
+- `Map::CopyDropDescriptors`：复制 Map 并丢弃 descriptor ownership/transition 状态。源码：`src/objects.cc:5395-5410`。
+- `Map::ShareDescriptor`：当前 Map 拥有 descriptors 时，把新 descriptor append 到同一个 DescriptorArray，并让子 Map 看更长前缀。源码：`src/objects.cc:5413-5490`。
+- `Map::CopyReplaceDescriptors`：用指定 DescriptorArray 创建新 Map，并按需插入 transition。源码：`src/objects.cc:5493-5521`。
+- `Map::CopyAsElementsKind`：创建 elements kind 不同的新 Map。源码：`src/objects.cc:5524-5575`。
 
 关键思想：多个 Map 可以共享同一个 `DescriptorArray`，但通过 `NumberOfOwnDescriptors()` 只暴露不同长度的前缀。这样可以减少 descriptor array 复制。
 
-!! 8. prototype 存在 Map 上
+## 8. prototype 存在 Map 上
 
 在这份旧 V8 中，普通对象的 `[[Prototype]]` 存在 `Map` 上，不在 `JSObject` 本体字段里：
 
-{{{
+```cpp
 DECL_ACCESSORS(prototype, Object)
-}}}
+```
 
 源码：`src/objects.h:5271-5273`。
 
 实现：
 
-{{{
+```cpp
 Object* Map::prototype() {
   return READ_FIELD(this, kPrototypeOffset);
 }
-}}}
+```
 
 源码：`src/objects-inl.h:3888-3890`。
 
 这意味着：
 
-{{{
+```text
 o.__proto__
   ~= o.map()->prototype()
-}}}
+```
 
 因此修改 `__proto__` 往往不是写 `JSObject` 本体字段，而是换一个 prototype 不同的新 Map。源码也明确说：
 
-{{{
+```text
 When you set the prototype of an object using the __proto__ accessor you
 need a new map for the object (the prototype is stored in the map).
-}}}
+```
 
 源码：`src/objects.h:5530-5536`。
 
-!! 9. elements kind 也在 Map 上
+## 9. elements kind 也在 Map 上
 
 `JSObject` 本体有 `elements` 槽，但这个槽该如何解释由 `Map::elements_kind()` 决定。
 
 相关源码：
 
-{{{
+```cpp
 inline void set_elements_kind(ElementsKind elements_kind)
 inline ElementsKind elements_kind()
-}}}
+```
 
 源码：`src/objects.h:5167-5185`。
 
 `elements kind` 存在 `bit_field2` 的高 5 位：
 
-{{{
+```cpp
 static const int kElementsKindShift = 3;
 static const int kElementsKindBitCount = 5;
 static const int kElementsKindMask = ...;
-}}}
+```
 
 源码：`src/objects.h:5606-5618`。
 
 所以：
 
-{{{
+```text
 JSObject::elements()
   是 backing store 指针
 
 JSObject::map()->elements_kind()
   决定 backing store 是 Smi elements、object elements、double elements、dictionary elements 等
-}}}
+```
 
-!! 10. slow properties / dictionary map
+## 10. slow properties / dictionary map
 
 当对象属性过多、属性名不适合 fast mode，或某些语义要求稳定字典结构时，V8 会把 fast properties 转为 dictionary properties。
 
 `AddFastProperty` 中有判断：
 
-{{{
+```cpp
 if ((!IsIdentifier(...) && name != hidden_symbol) ||
     (map()->unused_property_fields() == 0 && TooManyFastProperties(...))) {
   NormalizeProperties(CLEAR_INOBJECT_PROPERTIES, 0);
   return AddSlowProperty(name, value, attributes);
 }
-}}}
+```
 
 源码：`src/objects.cc:1605-1621`。
 
 dictionary-mode Map 通过 `Map::CopyNormalized` 创建：
 
-{{{
+```cpp
 result->set_dictionary_map(true);
-}}}
+```
 
 源码：`src/objects.cc:5364-5384`。
 
 fast mode 与 dictionary mode 的区别：
 
-{{{
+```text
 fast properties:
   Map + DescriptorArray 描述属性布局
   值在 in-object slots 或 properties FixedArray
@@ -391,27 +398,27 @@ dictionary properties:
   properties() 是 StringDictionary
   key/value/details 都在 dictionary entry 中
   map 标记为 dictionary_map
-}}}
+```
 
-!! 11. Map 与 GC
+## 11. Map 与 GC
 
 Map 还告诉 GC 如何遍历对象：
 
-* `visitor_id` 让 GC 选择对应 visitor，源码：`src/objects-inl.h:3273-3277`。
-* `instance_size` 用于固定大小对象的 Size 计算，源码：`src/objects-inl.h:3286-3290`。
-* `HeapObject::SizeFromMap` 对变长对象再按 `instance_type` 分派，源码：`src/objects-inl.h:3304-3335`。
-* Map 自身的 pointer fields 必须连续，供 `BodyDescriptor` 扫描，源码：`src/objects.h:5570-5574`。
+- `visitor_id` 让 GC 选择对应 visitor，源码：`src/objects-inl.h:3273-3277`。
+- `instance_size` 用于固定大小对象的 Size 计算，源码：`src/objects-inl.h:3286-3290`。
+- `HeapObject::SizeFromMap` 对变长对象再按 `instance_type` 分派，源码：`src/objects-inl.h:3304-3335`。
+- Map 自身的 pointer fields 必须连续，供 `BodyDescriptor` 扫描，源码：`src/objects.h:5570-5574`。
 
 这说明 Map 不只是属性优化结构，也是 GC 和对象遍历的基础元数据。
 
-!! 总结图
+## 总结图
 
-{{{
+```text
 HeapObject
   +0 map ------------------------+
   +body                          |
                                  v
-Map                              
+Map
   instance_type                  -> Object::IsJSObject / IsString / ...
   instance_size                  -> HeapObject::Size / in-object offset
   inobject_properties            -> JSObject::FastPropertyAt
@@ -422,6 +429,6 @@ Map
   transitions/back pointer       -> hidden class transition tree
   code_cache                     -> IC stub cache
   bit_field2.elements_kind       -> JSObject::elements 的解释方式
-}}}
+```
 
 一句话：V8 v3.16 的 `Map` 是所有堆对象的结构说明书；对 `JSObject` 来说，它就是隐藏类，决定属性如何查、值放在哪里、原型是谁、数组元素如何解释，以及对象形状变化时迁移到哪个新隐藏类。
