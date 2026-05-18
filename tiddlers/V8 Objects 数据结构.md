@@ -80,7 +80,7 @@
 //         - DebugInfo
 //         - BreakPointInfo
 //         - CodeCache
-``
+```
 
 tagged value:
 
@@ -195,7 +195,7 @@ JSReceiver 自己不定义新的对象内字段，它更多是一个“属性语
 
 具体的实现在 `Objects.cc` 里
 
-2. 元素 aka integer-indexed properties
+2. 元素 aka elements
 
 ```c++
   MUST_USE_RESULT MaybeObject* DeleteElement(uint32_t index, DeleteMode mode);
@@ -210,7 +210,7 @@ JSReceiver 自己不定义新的对象内字段，它更多是一个“属性语
                                           bool check_prototype);
 ```
 
-
+总结一下 JsRecevive
 
 
 ### JsObject
