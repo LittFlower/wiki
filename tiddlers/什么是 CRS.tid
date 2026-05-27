@@ -1,0 +1,40 @@
+created: 20260527151700051
+creator: LittFlower
+modified: 20260527151856591
+modifier: LittFlower
+title: 什么是 CRS
+type: 
+
+CRS 是 Cyber Reasoning System，自动化漏洞挖掘系统
+
+它的目标是：
+
+```
+给它一个真实开源项目
+    ↓
+自动构建项目
+    ↓
+自动分析代码
+    ↓
+自动找漏洞
+    ↓
+自动生成 PoV / 触发样例证明漏洞存在
+    ↓
+自动生成补丁
+    ↓
+自动验证补丁是否修好漏洞且不破坏原功能
+```
+
+所以 CRS = LLM agent + fuzzing + 静态分析 + 动态验证 + patch agent + 调度系统
+
+更具体一点，一个 CRS 通常包含这些模块：
+
+1. Builder 自动编译目标项目，处理依赖、sanitizer、harness。
+2. Analyzer 做静态分析、调用图分析、diff 分析、污点分析、LLM 代码审计。
+3. Fuzzer 用 AFL++、libFuzzer、Jazzer 等跑输入变异和 coverage 探索。
+4. PoV Generator
+   生成可以触发漏洞的输入，也就是 proof of vulnerability。
+5. Triage crash 去重、根因分析、判断是不是真漏洞。
+6. Patch Generator 自动生成修复补丁。
+7. Validator 验证 PoV 是否被修掉，原有测试是否还通过。
+8. Scheduler / Orchestrator 统一调度模型、工具、容器、任务队列和资源。

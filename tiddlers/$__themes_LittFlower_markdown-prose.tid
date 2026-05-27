@@ -1,6 +1,6 @@
 created: 20260527202754000
 creator: LittFlower
-modified: 20260527202754000
+modified: 20260527225723000
 modifier: LittFlower
 tags: $:/tags/Stylesheet
 title: $:/themes/LittFlower/markdown-prose
@@ -8,17 +8,56 @@ type: text/vnd.tiddlywiki
 
 \rules except horizrule dash
 
-/* Markdown reading polish for LittFlower's TidGi wiki. */
+/*
+Blog-matched Markdown rendering for TidGi.
+Scoped to rendered Markdown only; editors and normal WikiText are untouched.
+*/
 .tc-tiddler-body .markdown {
-  max-width: 78ch;
+  --lf-blog-max-file-width: 110ch;
+  --lf-blog-left-padding: 12px;
+  --lf-blog-right-padding: 12px;
+  --lf-blog-body-font: "JetBrains Mono", "Noto Sans SC", "PingFang SC",
+    "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+  --lf-blog-mono-font: "JetBrains Mono", monospace;
+  --lf-blog-bg: #ffffff;
+  --lf-blog-surface: #ffffff;
+  --lf-blog-surface-alt: #f1f5f9;
+  --lf-blog-surface-muted: #e2e8f0;
+  --lf-blog-text: #1e293b;
+  --lf-blog-text-muted: #475569;
+  --lf-blog-border: rgba(148, 163, 184, 0.35);
+  --lf-blog-border-strong: rgba(148, 163, 184, 0.55);
+  --lf-blog-inline-code: #4338ca;
+  --lf-blog-inline-code-bg: rgba(99, 102, 241, 0.08);
+  --lf-blog-accent: #2563eb;
+  --lf-blog-accent-hover: #1d4ed8;
+  --lf-blog-accent-soft: rgba(37, 99, 235, 0.12);
+  --lf-blog-divider: rgba(148, 163, 184, 0.45);
+  --lf-blog-shadow-soft: 0 12px 22px rgba(15, 23, 42, 0.07);
+  --lf-blog-codeblock-border: rgba(148, 163, 184, 0.35);
+  --lf-blog-codeblock-bg: #ffffff;
+  --lf-blog-codeblock-line-text: rgba(100, 116, 139, 0.95);
+  --lf-blog-codeblock-shadow: 0 12px 24px rgba(15, 23, 42, 0.08);
+
+  box-sizing: border-box;
+  min-width: 0;
+  max-width: var(--lf-blog-max-file-width);
   margin: 0 auto;
-  color: <<colour foreground>>;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans CJK SC", "Noto Sans SC", "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
+  padding: 0 var(--lf-blog-right-padding) 1rem var(--lf-blog-left-padding);
+  color: var(--lf-blog-text);
+  background: var(--lf-blog-bg);
+  font-family: var(--lf-blog-body-font);
   font-size: 1rem;
-  line-height: 1.78;
+  line-height: 1.7;
   letter-spacing: 0;
-  overflow-wrap: anywhere;
   word-break: normal;
+  overflow-wrap: break-word;
+}
+
+.tc-tiddler-body .markdown *,
+.tc-tiddler-body .markdown *::before,
+.tc-tiddler-body .markdown *::after {
+  box-sizing: border-box;
 }
 
 .tc-tiddler-body .markdown > :first-child {
@@ -30,7 +69,8 @@ type: text/vnd.tiddlywiki
 }
 
 .tc-tiddler-body .markdown p {
-  margin: 0.72em 0 1em;
+  margin: 1rem 0;
+  line-height: 1.7;
 }
 
 .tc-tiddler-body .markdown h1,
@@ -39,69 +79,200 @@ type: text/vnd.tiddlywiki
 .tc-tiddler-body .markdown h4,
 .tc-tiddler-body .markdown h5,
 .tc-tiddler-body .markdown h6 {
-  color: <<colour tiddler-title-foreground>>;
-  font-family: inherit;
-  font-weight: 650;
-  line-height: 1.28;
+  position: relative;
+  color: var(--lf-blog-text);
+  font-family: var(--lf-blog-body-font);
+  font-weight: 700;
+  line-height: 1.18;
   letter-spacing: 0;
-  scroll-margin-top: 90px;
+  scroll-margin-top: 64px;
+}
+
+.tc-tiddler-body .markdown h1::before,
+.tc-tiddler-body .markdown h2::before,
+.tc-tiddler-body .markdown h3::before,
+.tc-tiddler-body .markdown h4::before,
+.tc-tiddler-body .markdown h5::before,
+.tc-tiddler-body .markdown h6::before {
+  content: "#";
+  display: inline-block;
+  margin-right: 0.55rem;
+  color: var(--lf-blog-inline-code);
+  font-family: var(--lf-blog-mono-font);
+  font-weight: 700;
 }
 
 .tc-tiddler-body .markdown h1 {
-  margin: 1.2em 0 0.72em;
-  font-size: 1.9em;
-  padding-bottom: 0.28em;
-  border-bottom: 1px solid <<colour table-border>>;
+  margin: 0.67em 0;
+  font-size: 2em;
 }
 
 .tc-tiddler-body .markdown h2 {
-  margin: 1.55em 0 0.68em;
+  margin: 0.83em 0;
   font-size: 1.5em;
-  padding-bottom: 0.22em;
-  border-bottom: 1px solid <<colour table-border>>;
 }
 
 .tc-tiddler-body .markdown h3 {
-  margin: 1.35em 0 0.56em;
-  font-size: 1.23em;
+  margin: 1em 0;
+  font-size: 1.17em;
 }
 
 .tc-tiddler-body .markdown h4 {
-  margin: 1.15em 0 0.48em;
-  font-size: 1.08em;
-}
-
-.tc-tiddler-body .markdown h5,
-.tc-tiddler-body .markdown h6 {
-  margin: 1em 0 0.42em;
+  margin: 1.33em 0;
   font-size: 1em;
-  color: <<colour very-muted-foreground>>;
 }
 
+.tc-tiddler-body .markdown h5 {
+  margin: 1.67em 0;
+  font-size: 0.83em;
+}
+
+.tc-tiddler-body .markdown h6 {
+  margin: 2.33em 0;
+  color: var(--lf-blog-text-muted);
+  font-size: 0.67em;
+}
+
+.tc-tiddler-body .markdown h1 a,
+.tc-tiddler-body .markdown h2 a,
+.tc-tiddler-body .markdown h3 a,
+.tc-tiddler-body .markdown h4 a,
+.tc-tiddler-body .markdown h5 a,
+.tc-tiddler-body .markdown h6 a {
+  color: var(--lf-blog-text);
+  text-decoration: none;
+}
+
+.tc-tiddler-body .markdown a,
 .tc-tiddler-body .markdown a.tc-tiddlylink,
-.tc-tiddler-body .markdown a.tc-tiddlylink:hover,
+.tc-tiddler-body .markdown a.tc-tiddlylink:visited,
 .tc-tiddler-body .markdown a.tc-tiddlylink-external,
 .tc-tiddler-body .markdown a.tc-tiddlylink-external:visited {
-  font-weight: 500;
-  line-height: inherit;
-  word-break: normal;
-  overflow-wrap: anywhere;
-}
-
-.tc-tiddler-body .markdown a.tc-tiddlylink:hover,
-.tc-tiddler-body .markdown a.tc-tiddlylink-external:hover {
-  background-color: <<colour external-link-background-hover>>;
-  color: <<colour external-link-foreground-hover>>;
+  color: var(--lf-blog-accent);
+  background: transparent;
+  border: 0;
+  padding: 0;
+  text-decoration: underline;
+  text-decoration-thickness: 0.06em;
+  text-underline-offset: 0.16em;
   -webkit-text-fill-color: currentColor;
 }
 
+.tc-tiddler-body .markdown a:hover,
+.tc-tiddler-body .markdown a.tc-tiddlylink:hover,
+.tc-tiddler-body .markdown a.tc-tiddlylink-external:hover {
+  color: var(--lf-blog-accent-hover);
+  background: transparent;
+  text-decoration-thickness: 0.09em;
+  -webkit-text-fill-color: currentColor;
+}
+
+.tc-tiddler-body .markdown strong {
+  color: var(--lf-blog-text);
+  font-weight: 700;
+}
+
+.tc-tiddler-body .markdown em {
+  color: var(--lf-blog-text);
+}
+
+.tc-tiddler-body .markdown ul,
+.tc-tiddler-body .markdown ol {
+  margin: 1rem 0;
+  padding-left: 1.75rem;
+}
+
+.tc-tiddler-body .markdown li {
+  margin: 0.25rem 0;
+}
+
+.tc-tiddler-body .markdown li > p {
+  margin: 0.4rem 0;
+}
+
+.tc-tiddler-body .markdown li > ul,
+.tc-tiddler-body .markdown li > ol {
+  margin: 0.35rem 0;
+}
+
+.tc-tiddler-body .markdown code,
+.tc-tiddler-body .markdown tt,
+.tc-tiddler-body .markdown .inline-code {
+  color: var(--lf-blog-inline-code);
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  font-family: var(--lf-blog-mono-font);
+  font-size: 0.95em;
+  white-space: break-spaces;
+}
+
+.tc-tiddler-body .markdown pre {
+  display: block;
+  margin: 1.25rem 0;
+  padding: 1rem;
+  overflow-x: auto;
+  color: var(--lf-blog-codeblock-line-text);
+  background: var(--lf-blog-codeblock-bg);
+  border: 1px solid var(--lf-blog-codeblock-border);
+  border-radius: 10px;
+  box-shadow: var(--lf-blog-codeblock-shadow);
+  font-family: var(--lf-blog-mono-font);
+  font-size: 0.95rem;
+  line-height: 1.6;
+  word-break: normal;
+  overflow-wrap: normal;
+}
+
+.tc-tiddler-body .markdown pre code,
+.tc-tiddler-body .markdown pre tt {
+  display: block;
+  min-width: max-content;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: visible;
+  color: inherit;
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  font-family: inherit;
+  font-size: 100%;
+  line-height: inherit;
+  white-space: pre;
+  word-break: normal;
+  overflow-wrap: normal;
+}
+
+.tc-tiddler-body .markdown pre code::before,
+.tc-tiddler-body .markdown pre code::after,
+.tc-tiddler-body .markdown pre tt::before,
+.tc-tiddler-body .markdown pre tt::after {
+  content: none !important;
+}
+
+.tc-tiddler-body .markdown pre code *,
+.tc-tiddler-body .markdown pre tt *,
+.tc-tiddler-body .markdown pre .hljs,
+.tc-tiddler-body .markdown pre .hljs * {
+  margin: 0 !important;
+  padding: 0 !important;
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
 .tc-tiddler-body .markdown blockquote {
-  margin: 1.05em 0;
-  padding: 0.72em 1em;
-  color: <<colour very-muted-foreground>>;
-  background: <<colour tiddler-info-background>>;
-  border-left: 4px solid <<colour primary>>;
-  border-radius: 0 4px 4px 0;
+  margin: 1rem 0;
+  padding: 0.85rem 1rem;
+  color: var(--lf-blog-text);
+  background: var(--lf-blog-surface-alt);
+  border: 1px solid var(--lf-blog-border);
+  border-left: 4px solid var(--lf-blog-accent);
+  border-radius: 10px;
+  box-shadow: var(--lf-blog-shadow-soft);
 }
 
 .tc-tiddler-body .markdown blockquote > :first-child {
@@ -112,145 +283,209 @@ type: text/vnd.tiddlywiki
   margin-bottom: 0;
 }
 
-.tc-tiddler-body .markdown ul,
-.tc-tiddler-body .markdown ol {
-  margin: 0.8em 0 1em;
-  padding-left: 1.55em;
+.tc-tiddler-body .markdown blockquote blockquote {
+  background: var(--lf-blog-surface);
+  border-left-color: var(--lf-blog-accent-hover);
 }
 
-.tc-tiddler-body .markdown li {
-  margin: 0.24em 0;
-  padding-left: 0.12em;
-}
-
-.tc-tiddler-body .markdown li + li {
-  margin-top: 0.28em;
-}
-
-.tc-tiddler-body .markdown li > p {
-  margin: 0.42em 0;
-}
-
-.tc-tiddler-body .markdown code,
-.tc-tiddler-body .markdown p > code,
-.tc-tiddler-body .markdown li > code,
-.tc-tiddler-body .markdown td > code,
-.tc-tiddler-body .markdown th > code {
-  font-family: {{$:/themes/tiddlywiki/vanilla/settings/codefontfamily}};
-  font-size: 0.92em;
-  color: <<colour code-foreground>>;
-  background: <<colour code-background>>;
-  border: <<colour code-border>>;
+.tc-tiddler-body .markdown blockquote code,
+.tc-tiddler-body .markdown blockquote tt {
+  color: var(--lf-blog-inline-code);
+  background: var(--lf-blog-inline-code-bg);
   border-radius: 4px;
-  padding: 0.12em 0.34em;
-  box-decoration-break: clone;
-  -webkit-box-decoration-break: clone;
-}
-
-.tc-tiddler-body .markdown pre {
-  margin: 1.08em 0 1.2em;
-  padding: 0;
-  background: none;
-  border: none;
-  overflow: visible;
-  word-break: normal;
-}
-
-.tc-tiddler-body .markdown pre > code {
-  display: block;
-  max-width: 100%;
-  overflow-x: auto;
-  white-space: pre;
-  line-height: 1.58;
-  font-size: 0.93em;
-  color: <<colour code-foreground>>;
-  background: <<colour pre-background>>;
-  border: 1px solid <<colour pre-border>>;
-  border-radius: 6px;
-  padding: 0.9em 1em;
+  padding: 0.05em 0.25em;
 }
 
 .tc-tiddler-body .markdown table {
-  display: block;
-  width: max-content;
+  width: 100%;
   max-width: 100%;
-  margin: 1.05em 0 1.2em;
-  overflow-x: auto;
+  margin: 1rem 0;
+  border: 1px solid var(--lf-blog-border);
   border-collapse: collapse;
   border-spacing: 0;
+  color: var(--lf-blog-text);
+}
+
+.tc-tiddler-body .markdown th {
+  color: var(--lf-blog-text);
+  font-weight: 700;
 }
 
 .tc-tiddler-body .markdown th,
 .tc-tiddler-body .markdown td {
-  padding: 0.48em 0.72em;
-  border: 1px solid <<colour table-border>>;
+  padding: 10px;
+  border: 1px solid var(--lf-blog-border);
   vertical-align: top;
 }
 
-.tc-tiddler-body .markdown th {
-  font-weight: 650;
-  background: <<colour table-header-background>>;
-}
-
-.tc-tiddler-body .markdown tr:nth-child(even) td {
-  background: <<colour tiddler-editor-fields-even>>;
+.tc-tiddler-body .markdown img,
+.tc-tiddler-body .markdown video,
+.tc-tiddler-body .markdown canvas,
+.tc-tiddler-body .markdown svg {
+  max-width: 100%;
+  height: auto;
+  box-sizing: border-box;
 }
 
 .tc-tiddler-body .markdown img {
   display: block;
-  max-width: 100%;
-  height: auto;
-  margin: 1em auto;
-  border-radius: 4px;
+  margin: 1rem auto;
+  border-radius: 10px;
 }
 
 .tc-tiddler-body .markdown hr {
-  margin: 2em 0;
+  height: 0;
+  margin: 2rem 0;
   border: 0;
-  border-top: 1px solid <<colour table-border>>;
+  border-top: 1px solid var(--lf-blog-border);
+  background: transparent;
+}
+
+.tc-tiddler-body .markdown kbd {
+  display: inline-block;
+  padding: 0.12rem 0.35rem;
+  color: var(--lf-blog-text);
+  background: var(--lf-blog-surface-alt);
+  border: 1px solid var(--lf-blog-border-strong);
+  border-radius: 4px;
+  box-shadow: inset 0 -1px 0 var(--lf-blog-border);
+  font-family: var(--lf-blog-mono-font);
+  font-size: 0.85em;
+  line-height: 1.35;
+  vertical-align: 0.08em;
 }
 
 .tc-tiddler-body .markdown mark {
   color: inherit;
-  background: <<colour selection-background>>;
-  border-radius: 3px;
-  padding: 0.05em 0.25em;
+  background: rgba(250, 204, 21, 0.22);
+  border-radius: 2px;
+  padding: 0.05em 0.2em;
 }
 
 .tc-tiddler-body .markdown .footnotes {
-  margin-top: 2em;
-  padding-top: 0.8em;
-  border-top: 1px solid <<colour table-border>>;
-  color: <<colour muted-foreground>>;
+  margin-top: 2rem;
+  padding-top: 1rem;
+  color: var(--lf-blog-text-muted);
+  border-top: 1px solid var(--lf-blog-border);
 }
 
-.tc-tiddler-body .markdown kbd {
-  font-family: {{$:/themes/tiddlywiki/vanilla/settings/codefontfamily}};
-  font-size: 0.85em;
-  padding: 0.12em 0.36em;
-  border: 1px solid <<colour table-border>>;
-  border-bottom-width: 2px;
-  border-radius: 4px;
-  background: <<colour button-background>>;
+.tc-tiddler-body .markdown .task-list-item {
+  list-style-type: none;
 }
 
-@media (max-width: 720px) {
+.tc-tiddler-body .markdown .task-list-item input {
+  margin: 0 0.35em 0.2em -1.4em;
+  vertical-align: middle;
+}
+
+.tc-tiddler-body .markdown .hljs {
+  color: #24292e;
+  background: transparent;
+}
+
+.tc-tiddler-body .markdown .hljs-doctag,
+.tc-tiddler-body .markdown .hljs-keyword,
+.tc-tiddler-body .markdown .hljs-meta .hljs-keyword,
+.tc-tiddler-body .markdown .hljs-template-tag,
+.tc-tiddler-body .markdown .hljs-template-variable,
+.tc-tiddler-body .markdown .hljs-type,
+.tc-tiddler-body .markdown .hljs-variable.language_ {
+  color: #d73a49;
+}
+
+.tc-tiddler-body .markdown .hljs-title,
+.tc-tiddler-body .markdown .hljs-title.class_,
+.tc-tiddler-body .markdown .hljs-title.class_.inherited__,
+.tc-tiddler-body .markdown .hljs-title.function_ {
+  color: #6f42c1;
+}
+
+.tc-tiddler-body .markdown .hljs-attr,
+.tc-tiddler-body .markdown .hljs-attribute,
+.tc-tiddler-body .markdown .hljs-literal,
+.tc-tiddler-body .markdown .hljs-meta,
+.tc-tiddler-body .markdown .hljs-number,
+.tc-tiddler-body .markdown .hljs-operator,
+.tc-tiddler-body .markdown .hljs-variable,
+.tc-tiddler-body .markdown .hljs-selector-attr,
+.tc-tiddler-body .markdown .hljs-selector-class,
+.tc-tiddler-body .markdown .hljs-selector-id {
+  color: #005cc5;
+}
+
+.tc-tiddler-body .markdown .hljs-regexp,
+.tc-tiddler-body .markdown .hljs-string,
+.tc-tiddler-body .markdown .hljs-meta .hljs-string {
+  color: #032f62;
+}
+
+.tc-tiddler-body .markdown .hljs-built_in,
+.tc-tiddler-body .markdown .hljs-symbol {
+  color: #e36209;
+}
+
+.tc-tiddler-body .markdown .hljs-comment,
+.tc-tiddler-body .markdown .hljs-code,
+.tc-tiddler-body .markdown .hljs-formula {
+  color: #6a737d;
+}
+
+.tc-tiddler-body .markdown .hljs-name,
+.tc-tiddler-body .markdown .hljs-quote,
+.tc-tiddler-body .markdown .hljs-selector-tag,
+.tc-tiddler-body .markdown .hljs-selector-pseudo {
+  color: #22863a;
+}
+
+.tc-tiddler-body .markdown .hljs-subst {
+  color: #24292e;
+}
+
+.tc-tiddler-body .markdown .hljs-section {
+  color: #005cc5;
+  font-weight: 700;
+}
+
+.tc-tiddler-body .markdown .hljs-bullet {
+  color: #735c0f;
+}
+
+.tc-tiddler-body .markdown .hljs-emphasis {
+  color: #24292e;
+  font-style: italic;
+}
+
+.tc-tiddler-body .markdown .hljs-strong {
+  color: #24292e;
+  font-weight: 700;
+}
+
+.tc-tiddler-body .markdown .hljs-addition {
+  color: #22863a;
+  background-color: #f0fff4;
+}
+
+.tc-tiddler-body .markdown .hljs-deletion {
+  color: #b31d28;
+  background-color: #ffeef0;
+}
+
+@media screen and (max-width: 768px) {
   .tc-tiddler-body .markdown {
     max-width: 100%;
-    font-size: 0.98rem;
-    line-height: 1.72;
+    padding-right: 0;
+    padding-left: 0;
   }
 
-  .tc-tiddler-body .markdown h1 {
-    font-size: 1.62em;
+  .tc-tiddler-body .markdown table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
-  .tc-tiddler-body .markdown h2 {
-    font-size: 1.34em;
-  }
-
-  .tc-tiddler-body .markdown pre > code {
-    border-radius: 4px;
-    padding: 0.75em 0.85em;
+  .tc-tiddler-body .markdown table thead,
+  .tc-tiddler-body .markdown table tbody,
+  .tc-tiddler-body .markdown table tr {
+    width: 100%;
   }
 }
