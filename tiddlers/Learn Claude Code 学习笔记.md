@@ -217,12 +217,81 @@ DAG 的节点是一个独立 JSON 节点，大概如下：
 
 >  维护流程：
 >
->  1. TaskManager.create() 创建新节点，默认 status = pending，blockedBy = []，然后写入 `.tasks/task_<id>.json`。
->  2. TaskManager.update() 可通过 addBlockedBy 给某个 task 增加依赖边，也可通过 removeBlockedBy 删除依赖边。
->  3. 当某个 task 被更新为 completed 时，update() 会调用 `_clear_dependency(task_id)`。
->  4. `_clear_dependency()` 遍历所有 .tasks/task_*.json，如果其他 task 的 blockedBy 包含已完成的 task id，就把它移除并保存。
->  5. task_list() 只是读取所有 JSON，按 id 排序展示状态；如果 blockedBy 非空，就显示 (blocked by: [...])。
+>  1. `TaskManager.create()` 创建新节点，默认 `status = pending，blockedBy = []`，然后写入 `.tasks/task_<id>.json`。
+>  2. `TaskManager.update()` 可通过 `addBlockedBy` 给某个 task 增加依赖边，也可通过 `removeBlockedBy` 删除依赖边。
+>  3. 当某个 task 被更新为 `completed` 时，`update()` 会调用 `_clear_dependency(task_id)`。
+>  4. `_clear_dependency()` 遍历所有 `.tasks/task_*.json`，如果其他 task 的 `blockedBy` 包含已完成的 task id，就把它移除并保存。
+>  5. `task_list()` 只是读取所有 JSON，按 id 排序展示状态；如果 `blockedBy` 非空，就显示 `(blocked by: [...])`。
 
 DAG 的边不是正向存储为 `dependsOn` -> `children`，而是反向存在每个节点的 `blockedBy` 字段里。比如 task 2 的 `blockedBy: [1]` 表示 task 2 依赖 task1，只有 task 1 完成后 task 2 才不再被阻塞。
 
 另外，个人感觉这个文件夹其实可以有更好的支持原子写入的实现方式，直接用文件夹可能会导致后续多 agent 并发时出错。
+
+## 0x3. 记忆管理
+
+### Context Compact
+
+压缩的本质是清理对话上下文，信息没有真正丢失, 只是移出了当前 Agent 的活跃上下文。
+
+压缩分三种：
+- 微压缩：每次 LLM 调用前, 将旧的 tool result 替换为占位符。
+- 自动压缩：token 超过阈值时, 保存完整对话到磁盘, 让 LLM 做摘要。
+- 手动压缩：按照需求手动触发自动压缩。
+
+```
+    Every turn:
+    +------------------+
+    | Tool call result |
+    +------------------+
+            |
+            v
+    [Layer 1: micro_compact]        (silent, every turn)
+      Replace non-read_file tool_result content older than last 3
+      with "[Previous: used {tool_name}]"
+            |
+            v
+    [Check: tokens > 50000?]
+       |               |
+       no              yes
+       |               |
+       v               v
+    continue    [Layer 2: auto_compact]
+                  Save full transcript to .transcripts/
+                  Ask LLM to summarize conversation.
+                  Replace all messages with [summary].
+                        |
+                        v
+                [Layer 3: compact tool]
+                  Model calls compact -> immediate summarization.
+                  Same as auto, triggered manually.
+```
+
+#### 微压缩
+
+一般只会对上下文里的工具调用做替换，例如 `write_file` `edit_file`，一般不会替换 `read_file`，因为 `read_file` 的结果一般是 LLM 后续推理的重要依据，如果替换为占位符会导致后续幻觉或者需要再次 `read_file` 降低效率，因此一般只替换返回结果是确认信息类的 tools。
+
+#### 自动压缩
+
+先把当前所有上下文存储到磁盘上，然后调用 LLM 进行总结，总结得到的摘要作为后续新 `messages[]` 的新提示词，只需要系统提示词 + 摘要，不需要保留旧的 N 条消息，从而避免连贯性问题。
+
+## 0x4. 并发
+
+### Background Tasks
+
+之前讲 Agent 的本质就是一个 Loop，如果调用了一些阻塞式的 tools，会导致这个 Loop 的效率迅速降低。
+
+可以通过多线程实现对工具调用的并发，Agent 线程会持续不断的跑，每次 call tools 会启动后台线程并发执行，执行结果放到一个通知线程里。当 Agent Loop 处理到下一次 LLM 调用时，会取出通知线程里已有的 `tool_result`，这种解耦不需要后台线程了解主循环的状态或时序。
+
+具体来说，新增一个工具 `background_run`，LLM 通过这个工具可以让 Agents 在后台并行地调用一些工具（非阻塞式的），后台任务完成后，结果不会立即打断当前 LLM 调用，而是在下一轮 LLM 调用前从通知队列里取出，并作为一条 user 消息注入。这里注入会使用更稳定的 JSON 结构而非自然语言。
+
+
+## 0x5. 协作
+
+### Agent Teams
+
+如何让 Agents 像团队一样协作呢？之前的 Subagent 是一次性的: 生成、干活、返回摘要、消亡。没有身份，没有跨调用的记忆。Background Tasks 能跑 shell 命令，但做不了 LLM 引导的决策（也就是非 Agent）。
+
+真正的团队协作需要三样东西：
+(1) 能跨多轮对话存活的持久 Agent（跨多轮对话存活的持久  也就是 Leaderqqqqqqqqqqqqqqqqqqqqqqqqqq）
+(2) 身份和生命周期管理
+(3) Agent 之间的通信通道。

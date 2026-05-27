@@ -1,0 +1,249 @@
+created: 20260521023913081
+creator: LittFlower
+modified: 20260521081502388
+modifier: LittFlower
+tags: [[Linux Kernel]] 二进制知识
+title: Linux 内存管理
+type: text/markdown
+
+Linux 内存管理负责虚拟内存、按需分页、内核/用户态内存分配、文件映射等工作，这是官方文档对 MM 子系统职责的概括。
+
+
+## overview
+
+```
+用户程序
+  malloc / free / mmap / brk / read / write / fork / exec
+        |
+        v
+系统调用层
+  sys_brk / sys_mmap / sys_munmap / sys_mprotect / sys_madvise ...
+        |
+        v
+进程虚拟内存管理
+  mm_struct
+  vm_area_struct / VMA
+  mmap_lock / VMA lock
+        |
+        v
+页表与缺页异常
+  PGD / P4D / PUD / PMD / PTE
+  page fault -> handle_mm_fault()
+        |
+        v
+物理内存管理
+  NUMA node -> zone -> page / folio
+  buddy allocator
+  slab / slub allocator
+        |
+        v
+后端资源
+  RAM
+  page cache
+  swap
+  file system
+  device memory
+```
+
+也就是 Linux 给每个进程构造一个虚拟地址空间，再通过页表把虚拟地址映射到物理页，当内存不足时，内核会回收 page cache、换出匿名页、压缩/迁移页面，最后才可能触发 OOM。
+
+## 虚拟地址空间
+
+在内核中，虚拟地址空间主要由两个核心结构描述：
+
+
+```
+struct task_struct
+    -> struct mm_struct *mm
+        -> VMA 集合: 由 struct vm_area_struct 描述
+        -> 页表根指针
+        -> rss / 统计信息
+        -> mmap_lock
+```
+
+每个连续虚拟内存区都是一个 VMA，`mm` 通过 maple tree 组织这些 VMA
+
+VMA 一般就是 `/proc/self/maps` 里那个样子
+
+
+### VMA
+
+每个 VMA 回答以下问题：
+
+```
+这段虚拟地址从哪里到哪里？
+能不能读？
+能不能写？
+能不能执行？
+是匿名内存还是文件映射？
+如果是文件映射，对应哪个文件？
+是 private 还是 shared？
+发生缺页时应该怎么填充页面？
+```
+
+## 页表
+
+CPU 访问虚拟地址时，需要 MMU 根据页表把虚拟地址翻译成物理地址。Linux 把页表抽象成层级结构，页表用于把 CPU 看到的虚拟地址映射到外部内存总线看到的物理地址，Linux 当前定义的是最多五级页表层次，现在最常用的是四级页表。
+
+> 为什么是四级页表？
+>
+> 现代 linux 地址空间是 48 位也就是 2 ** 48，一个页的大小是 2 ** 12，那么需要能分出 2 ** 36 个页框号，一个页表项是 8 字节，一个页里一共可以存放 2 ** 9 个页表项，那么四级页表刚好是 2 ** 9 ** 4 == 2 ** 36
+
+CPU 当前使用哪一套页表，由 CR3 寄存器决定。
+
+```
+| 47.........39 | 38.........30 | 29.........21 | 20.........12 | 11......0 |
+|    PGD/PML4   |    PUD/PDPT   |    PMD/PD     |    PTE/PT     |  offset  |
+|     9 bits    |     9 bits    |    9 bits     |    9 bits     |  12 bits |
+```
+
+如果遇到 Huge page 可能会提前结束。
+
+### PTE
+
+```
+63        52 51                    12 11                 0
++-----------+------------------------+--------------------+
+| NX / etc  | physical page frame    | flags              |
++-----------+------------------------+--------------------+
+```
+一个典型的 PTE 如上，`flags` 里存储了一些页信息：
+
+```
+bit 0   Present     页面是否存在
+bit 1   RW          是否可写
+bit 2   User        用户态是否可访问
+bit 3   PWT         cache policy
+bit 4   PCD         cache policy
+bit 5   Accessed    是否被访问过
+bit 6   Dirty       是否被写过，主要用于叶子 PTE
+bit 7   PAT / PS    在不同层级含义不同
+bit 8   Global      全局页
+bit 63  NX          不可执行
+```
+
+因此如果可以任意读写页表，就可以任意写内核上的任意内存页（不管可不可写）
+
+
+
+### TLB
+
+存放了最近使用过的虚拟地址到物理地址的翻译结果。
+
+存放格式 `VA page 0x7ffff7ddc000 -> old PFN`，虚拟页号（VPN）其实就是前 36 位。
+
+dirty page table 需要考虑这个问题，因为如果修改了 PTE，后续 CPU 访问该 PTE 前可能依然先走了 TLB，解决办法是攻击是去修改一个没有被访问过的页表项。
+
+
+### page fault
+
+缺页异常。举个例子
+
+```c
+char *p = malloc(4096);
+p[0] = 'A';
+```
+
+流程分析
+
+1. `malloc()` 向 libc 申请内存
+2. libc 可能通过 `brk` 或 `mmap` 向内核申请虚拟地址范围
+3. 内核创建或扩展 VMA
+4. 此时未必有物理页
+5. 程序第一次写 `p[0]`
+6. CPU 查页表发现 PTE 不存在
+7. 触发 page fault
+8. 内核找到对应 VMA
+9. 确认这是合法写访问
+10. 从 buddy allocator 分配一个物理页
+11. 清零页面
+12. 建立 PTE：虚拟页 -> 物理页
+13. 返回用户态继续执行
+
+内核路径
+
+```c
+arch page fault entry
+    -> do_user_addr_fault() / do_page_fault()
+        -> handle_mm_fault()
+            -> __handle_mm_fault()
+                -> do_anonymous_page()
+                -> do_fault()
+                -> do_wp_page()
+                -> do_swap_page()
+```
+
+核心逻辑就是：找 VMA、查权限、决定是匿名页/文件页/swap/COW，然后安装页表项。
+
+#### 匿名内存、文件映射、共享映射
+
+1. 匿名内存：heap、stack、匿名 mmap
+2. 文件映射：一般来自 page cache，page cache 是用户和内核与文件系统交互的主要方式，普通 read、write、mmap 都会经过它，虽然 O_DIRECT 可以绕过。
+3. 共享内存
+
+### COW：fork 为什么快
+
+流程是：
+
+```
+父进程 fork()
+    |
+    |-- 子进程获得相似的 mm_struct / VMA / 页表
+    |-- 原本可写的匿名页被标成只读
+    |-- 父子进程共享物理页
+```
+
+
+```
+写只读页
+    -> page fault
+    -> 内核发现这是 COW 页
+    -> 分配新物理页
+    -> 复制旧页内容
+    -> 修改当前进程 PTE 指向新页并恢复可写
+```
+
+## 物理内存
+
+内核把物理内存抽象成页框，对应一个 `struct page`。
+
+OVERVIEW:
+
+```
+NUMA node
+  -> zone
+      -> pageblock
+          -> page / folio
+```
+
+### NUMA
+
+在多路服务器或现代复杂系统上，内存可能分属于不同 NUMA 节点。CPU 访问本地节点内存更快，访问远端节点内存更慢。Linux 默认倾向从当前 CPU 附近的本地 node 分配内存.
+
+### Zone
+
+
+### page
+
+
+### buddy allocator
+
+当内核需要分配物理页时，底层通常走 buddy allocator。
+
+按页分配，用二进制组合。
+
+
+### slub
+
+适用于小块内存分配
+
+`struct kmem_cache` 负责维护例如 `kmalloc-64` 这种 cache
+
+
+
+
+### page cache
+
+page cache 是文件系统和内存管理之间的关键桥梁。
+
+用户态不管是 `read` 还是 `mmap` 在触发 page fault 后都会去查 page cache，命中后建立 PTE 映射。
