@@ -1,9 +1,10 @@
 created: 20260527151700051
 creator: LittFlower
-modified: 20260527151856591
+modified: 20260527152511085
 modifier: LittFlower
+tags: 二进制知识 [[Harness 工程]]
 title: 什么是 CRS
-type: 
+type: text/markdown
 
 CRS 是 Cyber Reasoning System，自动化漏洞挖掘系统
 
