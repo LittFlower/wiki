@@ -1,6 +1,6 @@
 created: 20260521023913081
 creator: LittFlower
-modified: 20260521081502388
+modified: 20260528050848800
 modifier: LittFlower
 tags: [[Linux Kernel]] 二进制知识
 title: Linux 内存管理
@@ -247,3 +247,5 @@ NUMA node
 page cache 是文件系统和内存管理之间的关键桥梁。
 
 用户态不管是 `read` 还是 `mmap` 在触发 page fault 后都会去查 page cache，命中后建立 PTE 映射。
+
+[[内存页与 page cache 的关系]]
