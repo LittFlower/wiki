@@ -17,28 +17,29 @@ Scoped to rendered Markdown only; editors and normal WikiText are untouched.
   --lf-blog-max-file-width: 100%;
   --lf-blog-left-padding: 0;
   --lf-blog-right-padding: 0;
-  --lf-blog-body-font: "JetBrains Mono", "Noto Sans SC", "PingFang SC",
-    "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
-  --lf-blog-mono-font: "JetBrains Mono", monospace;
+  --lf-blog-body-font: "Segoe UI", "Noto Sans SC", "PingFang SC",
+    "Microsoft YaHei", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  --lf-blog-mono-font: "JetBrains Mono", "Cascadia Code", "SFMono-Regular",
+    Consolas, monospace;
   --lf-blog-bg: #ffffff;
   --lf-blog-surface: #ffffff;
-  --lf-blog-surface-alt: #f1f5f9;
-  --lf-blog-surface-muted: #e2e8f0;
-  --lf-blog-text: #1e293b;
-  --lf-blog-text-muted: #475569;
-  --lf-blog-border: rgba(148, 163, 184, 0.35);
-  --lf-blog-border-strong: rgba(148, 163, 184, 0.55);
-  --lf-blog-inline-code: #4338ca;
-  --lf-blog-inline-code-bg: rgba(99, 102, 241, 0.08);
-  --lf-blog-accent: #2563eb;
-  --lf-blog-accent-hover: #1d4ed8;
-  --lf-blog-accent-soft: rgba(37, 99, 235, 0.12);
-  --lf-blog-divider: rgba(148, 163, 184, 0.45);
-  --lf-blog-shadow-soft: 0 12px 22px rgba(15, 23, 42, 0.07);
-  --lf-blog-codeblock-border: rgba(148, 163, 184, 0.35);
-  --lf-blog-codeblock-bg: #ffffff;
-  --lf-blog-codeblock-line-text: rgba(100, 116, 139, 0.95);
-  --lf-blog-codeblock-shadow: 0 12px 24px rgba(15, 23, 42, 0.08);
+  --lf-blog-surface-alt: #f3f3f3;
+  --lf-blog-surface-muted: #e5e5e5;
+  --lf-blog-text: #1f1f1f;
+  --lf-blog-text-muted: #6a737d;
+  --lf-blog-border: #e5e5e5;
+  --lf-blog-border-strong: #cecece;
+  --lf-blog-inline-code: #a31515;
+  --lf-blog-inline-code-bg: rgba(163, 21, 21, 0.07);
+  --lf-blog-accent: #006ab1;
+  --lf-blog-accent-hover: #005a9e;
+  --lf-blog-accent-soft: rgba(0, 122, 204, 0.12);
+  --lf-blog-divider: #e5e5e5;
+  --lf-blog-shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.06), 0 6px 14px rgba(0, 0, 0, 0.04);
+  --lf-blog-codeblock-border: #e5e5e5;
+  --lf-blog-codeblock-bg: #f6f8fa;
+  --lf-blog-codeblock-line-text: #1f1f1f;
+  --lf-blog-codeblock-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 
   box-sizing: border-box;
   min-width: 0;
@@ -98,9 +99,10 @@ Scoped to rendered Markdown only; editors and normal WikiText are untouched.
   content: "#";
   display: inline-block;
   margin-right: 0.55rem;
-  color: var(--lf-blog-inline-code);
+  color: var(--lf-blog-accent);
   font-family: var(--lf-blog-mono-font);
   font-weight: 700;
+  opacity: 0.65;
 }
 
 .tc-tiddler-body .markdown h1 {
@@ -379,8 +381,9 @@ Scoped to rendered Markdown only; editors and normal WikiText are untouched.
   vertical-align: middle;
 }
 
+/* VS Code Light+ (default light theme) token colors */
 .tc-tiddler-body .markdown .hljs {
-  color: #24292e;
+  color: #1f1f1f;
   background: transparent;
 }
 
@@ -389,81 +392,90 @@ Scoped to rendered Markdown only; editors and normal WikiText are untouched.
 .tc-tiddler-body .markdown .hljs-meta .hljs-keyword,
 .tc-tiddler-body .markdown .hljs-template-tag,
 .tc-tiddler-body .markdown .hljs-template-variable,
-.tc-tiddler-body .markdown .hljs-type,
 .tc-tiddler-body .markdown .hljs-variable.language_ {
-  color: #d73a49;
+  color: #0000ff;
+}
+
+.tc-tiddler-body .markdown .hljs-type,
+.tc-tiddler-body .markdown .hljs-title.class_,
+.tc-tiddler-body .markdown .hljs-title.class_.inherited__,
+.tc-tiddler-body .markdown .hljs-built_in {
+  color: #267f99;
 }
 
 .tc-tiddler-body .markdown .hljs-title,
-.tc-tiddler-body .markdown .hljs-title.class_,
-.tc-tiddler-body .markdown .hljs-title.class_.inherited__,
 .tc-tiddler-body .markdown .hljs-title.function_ {
-  color: #6f42c1;
+  color: #795e26;
 }
 
 .tc-tiddler-body .markdown .hljs-attr,
 .tc-tiddler-body .markdown .hljs-attribute,
-.tc-tiddler-body .markdown .hljs-literal,
-.tc-tiddler-body .markdown .hljs-meta,
-.tc-tiddler-body .markdown .hljs-number,
-.tc-tiddler-body .markdown .hljs-operator,
 .tc-tiddler-body .markdown .hljs-variable,
 .tc-tiddler-body .markdown .hljs-selector-attr,
 .tc-tiddler-body .markdown .hljs-selector-class,
 .tc-tiddler-body .markdown .hljs-selector-id {
-  color: #005cc5;
+  color: #001080;
+}
+
+.tc-tiddler-body .markdown .hljs-literal,
+.tc-tiddler-body .markdown .hljs-number,
+.tc-tiddler-body .markdown .hljs-meta {
+  color: #098658;
+}
+
+.tc-tiddler-body .markdown .hljs-operator {
+  color: #000000;
 }
 
 .tc-tiddler-body .markdown .hljs-regexp,
 .tc-tiddler-body .markdown .hljs-string,
 .tc-tiddler-body .markdown .hljs-meta .hljs-string {
-  color: #032f62;
+  color: #a31515;
 }
 
-.tc-tiddler-body .markdown .hljs-built_in,
 .tc-tiddler-body .markdown .hljs-symbol {
-  color: #e36209;
+  color: #001080;
 }
 
 .tc-tiddler-body .markdown .hljs-comment,
 .tc-tiddler-body .markdown .hljs-code,
 .tc-tiddler-body .markdown .hljs-formula {
-  color: #6a737d;
+  color: #008000;
 }
 
 .tc-tiddler-body .markdown .hljs-name,
 .tc-tiddler-body .markdown .hljs-quote,
 .tc-tiddler-body .markdown .hljs-selector-tag,
 .tc-tiddler-body .markdown .hljs-selector-pseudo {
-  color: #22863a;
+  color: #800000;
 }
 
 .tc-tiddler-body .markdown .hljs-subst {
-  color: #24292e;
+  color: #1f1f1f;
 }
 
 .tc-tiddler-body .markdown .hljs-section {
-  color: #005cc5;
+  color: #0000ff;
   font-weight: 700;
 }
 
 .tc-tiddler-body .markdown .hljs-bullet {
-  color: #735c0f;
+  color: #795e26;
 }
 
 .tc-tiddler-body .markdown .hljs-emphasis {
-  color: #24292e;
+  color: #1f1f1f;
   font-style: italic;
 }
 
 .tc-tiddler-body .markdown .hljs-strong {
-  color: #24292e;
+  color: #1f1f1f;
   font-weight: 700;
 }
 
 .tc-tiddler-body .markdown .hljs-addition {
   color: #22863a;
-  background-color: #f0fff4;
+  background-color: #e6ffed;
 }
 
 .tc-tiddler-body .markdown .hljs-deletion {
