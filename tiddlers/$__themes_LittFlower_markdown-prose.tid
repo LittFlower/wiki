@@ -214,10 +214,17 @@ Scoped to rendered Markdown only; editors and normal WikiText are untouched.
 .tc-tiddler-body .markdown pre {
   display: block;
   margin: 1.25rem 0;
-  padding: 1rem;
+  padding: 2.7rem 1rem 1rem;
   overflow-x: auto;
   color: var(--lf-blog-codeblock-line-text);
-  background: var(--lf-blog-codeblock-bg);
+  /* Window-chrome top bar drawn as fixed backgrounds (stay put on h-scroll) */
+  background:
+    radial-gradient(circle at 1rem 0.98rem, #ff5f56 0.3rem, transparent calc(0.3rem + 0.5px)) no-repeat,
+    radial-gradient(circle at 2.05rem 0.98rem, #ffbd2e 0.3rem, transparent calc(0.3rem + 0.5px)) no-repeat,
+    radial-gradient(circle at 3.1rem 0.98rem, #27c93f 0.3rem, transparent calc(0.3rem + 0.5px)) no-repeat,
+    linear-gradient(var(--lf-blog-codeblock-border), var(--lf-blog-codeblock-border)) 0 1.95rem / 100% 1px no-repeat,
+    linear-gradient(#f3f3f3, #f3f3f3) 0 0 / 100% 1.95rem no-repeat,
+    var(--lf-blog-codeblock-bg);
   border: 1px solid var(--lf-blog-codeblock-border);
   border-radius: 10px;
   box-shadow: var(--lf-blog-codeblock-shadow);

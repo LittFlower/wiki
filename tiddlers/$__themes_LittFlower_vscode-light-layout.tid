@@ -316,31 +316,31 @@ body.tc-body .tc-sidebar-lists {
 
 body.tc-body .tc-sidebar-lists .tc-tab-buttons {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   flex-wrap: wrap;
-  gap: 0;
+  gap: 2px 1px;
   margin: 10px 0 0;
   border-bottom: 1px solid var(--lf-vs-border);
-  overflow-x: auto;
-  overflow-y: hidden;
+  overflow: visible;
 }
 
 body.tc-body .tc-sidebar-lists .tc-tab-buttons button {
-  min-height: var(--lf-vs-tab-height);
-  flex: 0 1 auto;
+  min-height: 27px;
+  flex: 0 0 auto;
   min-width: 0;
-  max-width: 120px;
+  max-width: 140px;
   margin: 0;
-  padding: 0 8px;
+  padding: 3px 9px;
   color: var(--lf-vs-muted);
   background: transparent;
   border: 0;
   border-bottom: 2px solid transparent;
-  border-radius: 0;
-  font-size: 0.86rem;
-  line-height: 1.15;
-  white-space: normal;
-  overflow-wrap: anywhere;
+  border-radius: var(--lf-vs-radius-sm) var(--lf-vs-radius-sm) 0 0;
+  font-size: 0.8rem;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 body.tc-body .tc-sidebar-lists .tc-tab-buttons button:hover {
@@ -481,11 +481,13 @@ body.tc-body .tc-tiddler-frame {
   background: var(--lf-vs-editor-bg);
   border: 1px solid var(--lf-vs-border);
   border-radius: var(--lf-vs-radius);
-  box-shadow: none;
+  box-shadow: var(--lf-vs-shadow);
+  transition: box-shadow 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
 }
 
 body.tc-body .tc-tiddler-frame:hover {
   border-color: var(--lf-vs-border-strong);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08), 0 12px 28px rgba(0, 0, 0, 0.06);
 }
 
 body.tc-body .tc-tiddler-title {
@@ -972,4 +974,121 @@ body.tc-body *::-webkit-scrollbar-thumb:hover {
   body.tc-body .tc-tiddler-edit-frame .tc-edit-field-remove {
     text-align: right;
   }
+}
+
+/* Unified focus ring (keyboard navigation) */
+body.tc-body a:focus-visible,
+body.tc-body button:focus-visible,
+body.tc-body input:focus-visible,
+body.tc-body textarea:focus-visible,
+body.tc-body select:focus-visible,
+body.tc-body .tc-tiddlylink:focus-visible {
+  outline: 2px solid var(--lf-vs-accent);
+  outline-offset: 1px;
+  border-radius: var(--lf-vs-radius-sm);
+}
+
+/* Unified active / selected surface (VS Code list.activeSelection) */
+body.tc-body .tc-drop-down .tc-drop-down-item:hover,
+body.tc-body .tc-drop-down a.tc-tiddlylink:hover,
+body.tc-body .tc-drop-down button:hover,
+body.tc-body .tc-block-dropdown a.tc-tiddlylink:hover,
+body.tc-body .tc-search-results .tc-list-item:hover,
+body.tc-body .tc-reveal.tc-popup a.tc-tiddlylink:hover {
+  color: var(--lf-vs-text);
+  background: var(--lf-vs-active);
+  border-radius: var(--lf-vs-radius-sm);
+}
+
+body.tc-body .tc-drop-down .tc-drop-down-item.tc-selected,
+body.tc-body .tc-block-dropdown .tc-list-item.tc-selected,
+body.tc-body .tc-search-results .tc-list-item.tc-selected {
+  color: var(--lf-vs-text);
+  background: var(--lf-vs-active-strong);
+  border-radius: var(--lf-vs-radius-sm);
+}
+
+/* Sidebar search: keep input + icon buttons on one row (flatten wrappers) */
+body.tc-body .tc-sidebar-search .tc-search {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 4px;
+}
+
+body.tc-body .tc-sidebar-search .tc-search .tc-keyboard,
+body.tc-body .tc-sidebar-search .tc-search .tc-form-inline {
+  display: contents;
+}
+
+body.tc-body .tc-sidebar-search .tc-search input {
+  flex: 1 1 auto;
+  width: auto;
+  min-width: 0;
+}
+
+body.tc-body .tc-sidebar-search .tc-search button.tc-btn-invisible {
+  flex: 0 0 auto;
+  width: var(--lf-vs-icon-button-size);
+  min-width: var(--lf-vs-icon-button-size);
+  height: var(--lf-vs-icon-button-size);
+  color: var(--lf-vs-faint);
+  border: 1px solid transparent;
+  border-radius: var(--lf-vs-radius-sm);
+}
+
+body.tc-body .tc-sidebar-search .tc-search button.tc-btn-invisible:hover {
+  color: var(--lf-vs-text);
+  background: var(--lf-vs-hover);
+  border-color: var(--lf-vs-border);
+}
+
+/* Recent tab: timeline list (date headers + entry rows with guide line) */
+body.tc-body .tc-sidebar-lists .tc-timeline {
+  margin-top: 4px;
+}
+
+body.tc-body .tc-sidebar-lists .tc-timeline .tc-menu-list-item {
+  margin: 0;
+  padding: 0;
+  color: var(--lf-vs-faint);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  white-space: normal;
+  border-radius: 0;
+}
+
+body.tc-body .tc-sidebar-lists .tc-timeline .tc-menu-list-item:hover {
+  background: transparent;
+}
+
+body.tc-body .tc-sidebar-lists .tc-timeline .tc-menu-list-item + .tc-menu-list-item {
+  margin-top: 13px;
+}
+
+body.tc-body .tc-sidebar-lists .tc-timeline .tc-menu-list-subitem {
+  margin: 2px 0 0;
+  padding: 0;
+  border-left: 1px solid var(--lf-vs-border);
+}
+
+body.tc-body .tc-sidebar-lists .tc-timeline .tc-menu-list-subitem a.tc-tiddlylink {
+  display: block;
+  margin: 1px 0;
+  padding: 4px 8px 4px 12px;
+  color: var(--lf-vs-muted);
+  font-size: var(--lf-vs-ui-font-size);
+  font-weight: 400;
+  line-height: 1.4;
+  letter-spacing: 0;
+  text-decoration: none;
+  white-space: normal;
+  border-radius: 0 var(--lf-vs-radius-sm) var(--lf-vs-radius-sm) 0;
+}
+
+body.tc-body .tc-sidebar-lists .tc-timeline .tc-menu-list-subitem a.tc-tiddlylink:hover {
+  color: var(--lf-vs-text);
+  background: var(--lf-vs-hover);
+  box-shadow: inset 2px 0 0 var(--lf-vs-accent);
 }
