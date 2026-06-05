@@ -389,7 +389,7 @@ Scoped to rendered Markdown only; editors and normal WikiText are untouched.
 }
 
 /* VS Code Light+ (default light theme) token colors */
-.tc-tiddler-body .markdown .hljs {
+.tc-tiddler-body .markdown pre code.hljs {
   color: #1f1f1f;
   background: transparent;
 }

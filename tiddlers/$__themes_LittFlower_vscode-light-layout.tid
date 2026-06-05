@@ -22,9 +22,9 @@ body.tc-body {
   --lf-vs-ui-line-height: 1.45;
   --lf-vs-content-font-size: 15px;
 
-  --lf-vs-sidebar-width: 340px;
-  --lf-vs-sidebar-min-width: 300px;
-  --lf-vs-sidebar-max-width: 520px;
+  --lf-vs-sidebar-width: {{$:/themes/tiddlywiki/vanilla/metrics/sidebarwidth}};
+  --lf-vs-sidebar-min-width: 280px;
+  --lf-vs-sidebar-max-width: 760px;
   --lf-vs-sidebar-padding: 14px;
   --lf-vs-sidebar-gap: 10px;
 
@@ -139,7 +139,7 @@ body.tc-body .tc-page-container > .tc-dropzone {
     margin: 0 !important;
     padding: var(--lf-vs-sidebar-padding);
     overflow: auto;
-    resize: horizontal;
+    resize: none;
     direction: rtl;
     background: var(--lf-vs-sidebar-bg);
     border-left: 1px solid var(--lf-vs-border);
