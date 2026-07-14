@@ -1,0 +1,28 @@
+caption: 大纲
+created: 20260714194021000
+creator: LittFlower
+list-before: $:/core/ui/SideBar/Open
+modified: 20260714194021000
+modifier: LittFlower
+tags: $:/tags/SideBar
+title: $:/themes/LittFlower/sidebar-outline
+type: text/vnd.tiddlywiki
+
+\whitespace trim
+
+<div class="lf-sidebar-outline-host">
+  <$list filter="[[$:/temp/focussedTiddler]is[tiddler]get[text]]" variable="outlineTiddler" emptyMessage="<p class='lf-sidebar-outline-empty'>当前没有可生成大纲的条目</p>">
+    <div class="lf-sidebar-outline">
+      <p class="lf-sidebar-outline-title"><$text text=<<outlineTiddler>>/></p>
+      <$page-toc
+        tiddler=<<outlineTiddler>>
+        headerTag="button"
+        class="lf-sidebar-outline-list"
+        headerClassPrefix="lf-sidebar-outline-"
+        emptyMessage="当前条目没有标题"
+        h1="no"
+        scrollMode="start"
+      />
+    </div>
+  </$list>
+</div>
