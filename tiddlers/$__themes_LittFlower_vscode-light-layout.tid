@@ -1,6 +1,6 @@
 created: 20260527231647000
 creator: LittFlower
-modified: 20260714194021000
+modified: 20260528002154000
 modifier: LittFlower
 tags: $:/tags/Stylesheet
 title: $:/themes/LittFlower/vscode-light-layout
@@ -15,8 +15,6 @@ Adjust the variables in this first block to resize the main parts.
 body.tc-body {
   --lf-vs-ui-font: "JetBrains Mono", "Noto Sans Mono CJK SC", "Sarasa Mono SC",
     "PingFang SC", "Microsoft YaHei", monospace;
-  --lf-vs-content-font: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
-    "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
   --lf-vs-mono-font: "JetBrains Mono", "Cascadia Code", "SFMono-Regular",
     Consolas, monospace;
 
@@ -58,7 +56,7 @@ body.tc-body {
   --lf-vs-border-strong: #cecece;
   --lf-vs-text: #1f1f1f;
   --lf-vs-muted: #616161;
-  --lf-vs-faint: #6f6f6f;
+  --lf-vs-faint: #8c8c8c;
   --lf-vs-accent: #007acc;
   --lf-vs-accent-hover: #005a9e;
   --lf-vs-success: #16825d;
@@ -358,85 +356,6 @@ body.tc-body .tc-sidebar-lists .tc-tab-buttons button.tc-tab-selected {
   border-bottom: 2px solid var(--lf-vs-accent);
 }
 
-/* Navigable outline for the focused long-form tiddler. */
-body.tc-body .lf-sidebar-outline {
-  padding: 10px 0 18px;
-}
-
-body.tc-body .lf-sidebar-outline-title {
-  margin: 0 8px 8px;
-  color: var(--lf-vs-faint);
-  font-size: 0.76rem;
-  font-weight: 600;
-}
-
-body.tc-body .lf-sidebar-outline-list {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-}
-
-body.tc-body .lf-sidebar-outline-h1,
-body.tc-body .lf-sidebar-outline-h2,
-body.tc-body .lf-sidebar-outline-h3,
-body.tc-body .lf-sidebar-outline-h4,
-body.tc-body .lf-sidebar-outline-h5,
-body.tc-body .lf-sidebar-outline-h6 {
-  display: block;
-  width: 100%;
-  margin: 0;
-  padding: 6px 8px;
-  overflow: hidden;
-  color: var(--lf-vs-muted);
-  background: transparent;
-  border: 0;
-  border-radius: var(--lf-vs-radius-sm);
-  font-family: var(--lf-vs-ui-font);
-  font-size: 0.8rem;
-  line-height: 1.35;
-  text-align: left;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  cursor: pointer;
-}
-
-body.tc-body .lf-sidebar-outline-h1,
-body.tc-body .lf-sidebar-outline-h2 {
-  color: var(--lf-vs-text);
-  font-weight: 600;
-}
-
-body.tc-body .lf-sidebar-outline-h1 {
-  display: none;
-}
-
-body.tc-body .lf-sidebar-outline-h3 {
-  padding-left: 20px;
-}
-
-body.tc-body .lf-sidebar-outline-h4,
-body.tc-body .lf-sidebar-outline-h5,
-body.tc-body .lf-sidebar-outline-h6 {
-  padding-left: 32px;
-}
-
-body.tc-body .lf-sidebar-outline-h1:hover,
-body.tc-body .lf-sidebar-outline-h2:hover,
-body.tc-body .lf-sidebar-outline-h3:hover,
-body.tc-body .lf-sidebar-outline-h4:hover,
-body.tc-body .lf-sidebar-outline-h5:hover,
-body.tc-body .lf-sidebar-outline-h6:hover {
-  color: var(--lf-vs-text);
-  background: var(--lf-vs-hover);
-}
-
-body.tc-body .lf-sidebar-outline-empty {
-  margin: 0;
-  padding: 12px 8px;
-  color: var(--lf-vs-faint);
-  font-size: 0.8rem;
-}
-
 body.tc-body .tc-sidebar-lists .tc-tab-divider {
   border-top: 0;
 }
@@ -615,7 +534,6 @@ body.tc-body .tc-tags-wrapper {
 
 body.tc-body .tc-tiddler-frame .tc-tiddler-body {
   color: var(--lf-vs-text);
-  font-family: var(--lf-vs-content-font);
   font-size: var(--lf-vs-content-font-size);
   line-height: 1.65;
 }

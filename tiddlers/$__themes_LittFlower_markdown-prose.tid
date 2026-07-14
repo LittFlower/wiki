@@ -1,6 +1,6 @@
 created: 20260527202754000
 creator: LittFlower
-modified: 20260714194021000
+modified: 20260527235155000
 modifier: LittFlower
 revision: 0
 tags: $:/tags/Stylesheet
@@ -14,11 +14,11 @@ Blog-matched Markdown rendering for TidGi.
 Scoped to rendered Markdown only; editors and normal WikiText are untouched.
 */
 .tc-tiddler-body .markdown {
-  --lf-blog-max-file-width: 860px;
+  --lf-blog-max-file-width: 100%;
   --lf-blog-left-padding: 0;
   --lf-blog-right-padding: 0;
-  --lf-blog-body-font: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
-    "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+  --lf-blog-body-font: "JetBrains Mono", "Noto Sans Mono CJK SC", "Sarasa Mono SC",
+    "PingFang SC", "Microsoft YaHei", monospace;
   --lf-blog-mono-font: "JetBrains Mono", "Cascadia Code", "SFMono-Regular",
     Consolas, monospace;
   --lf-blog-bg: #ffffff;
@@ -44,7 +44,7 @@ Scoped to rendered Markdown only; editors and normal WikiText are untouched.
   box-sizing: border-box;
   min-width: 0;
   max-width: var(--lf-blog-max-file-width);
-  margin: 0 auto;
+  margin: 0;
   padding: 0 var(--lf-blog-right-padding) 1rem var(--lf-blog-left-padding);
   color: var(--lf-blog-text);
   background: var(--lf-blog-bg);
@@ -96,20 +96,22 @@ Scoped to rendered Markdown only; editors and normal WikiText are untouched.
 .tc-tiddler-body .markdown h4::before,
 .tc-tiddler-body .markdown h5::before,
 .tc-tiddler-body .markdown h6::before {
-  content: none;
+  content: "#";
+  display: inline-block;
+  margin-right: 0.55rem;
+  color: var(--lf-blog-accent);
+  font-family: var(--lf-blog-mono-font);
+  font-weight: 700;
+  opacity: 0.65;
 }
 
 .tc-tiddler-body .markdown h1 {
-  margin: 0.35em 0 0.85em;
-  padding-bottom: 0.35em;
-  border-bottom: 1px solid var(--lf-blog-divider);
+  margin: 0.67em 0;
   font-size: 2em;
 }
 
 .tc-tiddler-body .markdown h2 {
-  margin: 1.55em 0 0.65em;
-  padding-bottom: 0.25em;
-  border-bottom: 1px solid var(--lf-blog-divider);
+  margin: 0.83em 0;
   font-size: 1.5em;
 }
 
@@ -228,7 +230,7 @@ Scoped to rendered Markdown only; editors and normal WikiText are untouched.
   box-shadow: var(--lf-blog-codeblock-shadow);
   font-family: var(--lf-blog-mono-font);
   font-size: 0.95rem;
-  line-height: 1.5;
+  line-height: 1.6;
   word-break: normal;
   overflow-wrap: normal;
 }
