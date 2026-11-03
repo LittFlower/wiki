@@ -15,18 +15,17 @@ Leading is set for mixed Chinese and Latin text; headings lean on space
 rather than rules and colour.
 */
 body.tc-body .tc-tiddler-body {
-  --lf-prose-font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC",
-    "Helvetica Neue", "Hiragino Sans GB", Arial, sans-serif;
-  --lf-prose-mono: "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
+  --lf-prose-font: "JetBrains Mono", "PingFang SC", "Hiragino Sans GB", Menlo, monospace;
+  --lf-prose-mono: "JetBrains Mono", "PingFang SC", Menlo, Consolas, monospace;
 
-  --lf-prose-size: 16.5px;
+  --lf-prose-size: 15.5px;
   --lf-prose-leading: 1.8;
-  --lf-prose-measure: 46rem;
+  --lf-prose-measure: 43rem;
   --lf-prose-gap: 1.05em;
 
   --lf-ink-strong: #2b2924;
   --lf-ink: #37352f;
-  --lf-muted: #7a736a;
+  --lf-muted: #6e675d;
   --lf-faint: #a8a29a;
   --lf-line: #ecebe7;
   --lf-line-strong: #e3e0d9;
@@ -38,7 +37,7 @@ body.tc-body .tc-tiddler-body {
   line-height: var(--lf-prose-leading);
   color: var(--lf-ink);
   max-width: var(--lf-prose-measure);
-  letter-spacing: 0.002em;
+  letter-spacing: 0;
   overflow-wrap: break-word;
 }
 
@@ -85,7 +84,7 @@ body.tc-body .tc-tiddler-body h6 {
   font-family: var(--lf-prose-font);
   color: var(--lf-ink-strong);
   line-height: 1.38;
-  letter-spacing: -0.008em;
+  letter-spacing: 0;
   border: none;
   padding: 0;
   margin: 1.9em 0 0.62em;
@@ -99,7 +98,7 @@ body.tc-body .tc-tiddler-body h5 { font-size: 0.94em; font-weight: 600; color: v
 body.tc-body .tc-tiddler-body h6 {
   font-size: 0.84em;
   font-weight: 600;
-  color: var(--lf-faint);
+  color: var(--lf-muted);
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
@@ -139,9 +138,9 @@ body.tc-body .tc-tiddler-body code,
 body.tc-body .tc-tiddler-body .markdown .inline-code,
 body.tc-body .tc-tiddler-body tt {
   font-family: var(--lf-prose-mono);
-  font-size: 0.87em;
-  background: var(--lf-surface);
-  border: 1px solid var(--lf-line);
+  font-size: 0.92em;
+  background: #f3f1ec;
+  border: 1px solid var(--lf-line-strong);
   border-radius: 5px;
   padding: 0.1em 0.36em;
   color: #8a4b3c;
@@ -225,7 +224,7 @@ body.tc-body .tc-tiddler-body pre {
   border-radius: 8px;
   padding: 14px 16px;
   overflow-x: auto;
-  font-size: 0.86em;
+  font-size: 0.92em;
   line-height: 1.66;
 }
 
@@ -287,7 +286,7 @@ body.tc-body .tc-tiddler-body td {
 body.tc-body .tc-tiddler-body th {
   font-weight: 600;
   color: var(--lf-muted);
-  font-size: 0.86em;
+  font-size: 1em;
   letter-spacing: 0.02em;
   border-bottom: 1px solid var(--lf-line-strong);
   background: transparent;
@@ -315,7 +314,7 @@ body.tc-body .tc-tiddler-body .footnotes {
 
 @media screen and (max-width: 768px) {
   body.tc-body .tc-tiddler-body {
-    --lf-prose-size: 16px;
-    --lf-prose-leading: 1.75;
+    --lf-prose-size: 15px;
+    --lf-prose-leading: 1.76;
   }
 }

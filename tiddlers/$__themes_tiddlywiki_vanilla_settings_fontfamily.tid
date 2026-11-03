@@ -5,4 +5,4 @@ modifier: LittFlower
 title: $:/themes/tiddlywiki/vanilla/settings/fontfamily
 type: text/vnd.tiddlywiki
 
--apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Helvetica Neue", "Hiragino Sans GB", Arial, sans-serif
+"JetBrains Mono", "PingFang SC", "Hiragino Sans GB", Menlo, monospace

@@ -15,19 +15,18 @@ tabs and editor. Structure is left to the stock theme on purpose.
 Tune the variables in this first block; everything else follows them.
 */
 body.tc-body {
-  --lf-ui-font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC",
-    "Helvetica Neue", "Hiragino Sans GB", Arial, sans-serif;
-  --lf-mono-font: "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
+  --lf-ui-font: "JetBrains Mono", "PingFang SC", "Hiragino Sans GB", Menlo, monospace;
+  --lf-mono-font: "JetBrains Mono", "PingFang SC", Menlo, Consolas, monospace;
 
-  --lf-measure: 46rem;
-  --lf-ui-size: 14px;
+  --lf-measure: 43rem;
+  --lf-ui-size: 13.5px;
   --lf-ui-leading: 1.55;
 
   --lf-paper: #ffffff;
   --lf-page: #faf9f7;
   --lf-ink-strong: #2b2924;
   --lf-ink: #37352f;
-  --lf-muted: #7a736a;
+  --lf-muted: #6e675d;
   --lf-faint: #a8a29a;
   --lf-line: #ecebe7;
   --lf-line-strong: #e3e0d9;
@@ -92,14 +91,14 @@ body.tc-body .tc-titlebar h2 {
   font-size: 1.6rem;
   font-weight: 600;
   line-height: 1.32;
-  letter-spacing: -0.012em;
+  letter-spacing: -0.002em;
   color: var(--lf-ink-strong);
 }
 
 body.tc-body .tc-subtitle,
 body.tc-body .tc-tiddler-subtitle {
   font-size: 0.78rem;
-  color: var(--lf-faint);
+  color: var(--lf-muted);
   letter-spacing: 0.01em;
 }
 
@@ -130,6 +129,7 @@ body.tc-body .tc-tiddler-controls button:hover svg {
 body.tc-body a.tc-tiddlylink,
 body.tc-body a.tc-tiddlylink-external {
   color: var(--lf-accent);
+  font-weight: 400;
   text-decoration: none;
   border-bottom: 1px solid transparent;
   transition: border-color 120ms ease, color 120ms ease;
@@ -143,7 +143,8 @@ body.tc-body a.tc-tiddlylink-external:hover {
 }
 
 body.tc-body a.tc-tiddlylink-missing {
-  color: var(--lf-faint);
+  color: var(--lf-muted);
+  font-weight: 400;
   font-style: normal;
   border-bottom: 1px dotted var(--lf-line-strong);
 }
@@ -251,7 +252,7 @@ body.tc-body .tc-sidebar-lists .tc-tab-buttons button.tc-tab-selected {
   padding: 6px 10px;
   font-size: 0.82rem;
   font-weight: 450;
-  color: var(--lf-faint);
+  color: var(--lf-muted);
   white-space: nowrap;
   transition: color 120ms ease, border-color 120ms ease;
 }
@@ -273,6 +274,7 @@ body.tc-body .tc-sidebar-lists .tc-tab-divider {
 
 body.tc-body .tc-sidebar-lists a.tc-tiddlylink {
   color: #57514a;
+  font-weight: 400;
   border-bottom: none;
 }
 
