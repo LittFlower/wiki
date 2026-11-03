@@ -1,0 +1,138 @@
+alert-background: #fdf6e3
+alert-border: #e8dcc0
+alert-highlight: #a8521f
+alert-muted-foreground: #8a7a5f
+background: #ffffff
+blockquote-bar: #ddd9d1
+button-background: #ffffff
+button-background-hover: #f5f3ef
+button-foreground: #37352f
+button-border: 1px solid #e3e0d9
+code-background: #f7f6f3
+code-border: 1px solid #ecebe7
+code-foreground: #8a4b3c
+diff-delete-background: #fdf0ef
+diff-delete-foreground: #8a3a33
+diff-equal-background: 
+diff-equal-foreground: <<colour foreground>>
+diff-insert-background: #eef7f0
+diff-insert-foreground: #2f6a42
+diff-invisible-background: 
+diff-invisible-foreground: <<colour muted-foreground>>
+dirty-indicator: #c2552f
+download-background: #2f6a42
+download-foreground: #ffffff
+dragger-background: #3b6ea8
+dragger-foreground: #ffffff
+dropdown-background: #ffffff
+dropdown-border: #e3e0d9
+dropdown-tab-background-selected: #f0f4f9
+dropdown-tab-background: #f7f6f3
+dropzone-background: rgba(59, 110, 168, 0.10)
+external-link-background-hover: transparent
+external-link-background-clip-image: none
+external-link-background-visited: inherit
+external-link-background: inherit
+external-link-foreground-hover: #2c5580
+external-link-foreground-visited: #6b4f87
+external-link-foreground: #3b6ea8
+external-link-underline: none
+foreground: #37352f
+message-background: #f6f8fb
+message-border: #dfe6ef
+message-foreground: #2c5580
+modal-backdrop: rgba(32, 30, 27, 0.28)
+modal-background: <<colour background>>
+modal-border: #e3e0d9
+modal-footer-background: #faf9f7
+modal-footer-border: #ecebe7
+modal-header-border: #ecebe7
+muted-foreground: #7a736a
+notification-background: #ffffff
+notification-border: #e3e0d9
+page-background: #faf9f7
+pre-background: #f7f6f3
+pre-border: #ecebe7
+primary: #3b6ea8
+selection-background: #d6e4f2
+selection-foreground: #1f2933
+select-tag-background: #f0f4f9
+select-tag-foreground: #2c5580
+sidebar-button-foreground: #7a736a
+sidebar-controls-foreground-hover: #37352f
+sidebar-controls-foreground: #a8a29a
+sidebar-foreground-shadow: none
+sidebar-foreground: #7a736a
+sidebar-muted-foreground-hover: #37352f
+sidebar-muted-foreground: #a8a29a
+sidebar-tab-background-selected: transparent
+sidebar-tab-background: transparent
+sidebar-tab-border-selected: #3b6ea8
+sidebar-tab-border: transparent
+sidebar-tab-divider: #ecebe7
+sidebar-tab-foreground-selected: #37352f
+sidebar-tab-foreground: #7a736a
+sidebar-tiddler-link-foreground-hover: #37352f
+sidebar-tiddler-link-foreground: #57514a
+site-title-foreground: #37352f
+static-alert-foreground: #8a7a5f
+tab-background-selected: transparent
+tab-background: transparent
+tab-border-selected: #3b6ea8
+tab-border: transparent
+tab-divider: #ecebe7
+tab-foreground-selected: #37352f
+tab-foreground: #7a736a
+table-border: #ecebe7
+table-footer-background: #faf9f7
+table-header-background: #faf9f7
+tag-background: #f1efea
+tag-background-hover: #e7e4dd
+tag-foreground: #57514a
+tiddler-background: <<colour background>>
+tiddler-border: #ecebe7
+tiddler-controls-foreground-hover: #37352f
+tiddler-controls-foreground-selected: #3b6ea8
+tiddler-controls-foreground: #b5afa6
+tiddler-editor-background: #ffffff
+tiddler-editor-border-image: #3b6ea8
+tiddler-editor-border: #ecebe7
+tiddler-editor-fields-even: #faf9f7
+tiddler-editor-fields-odd: #ffffff
+tiddler-info-background: #faf9f7
+tiddler-info-border: #ecebe7
+tiddler-info-tab-background: #ffffff
+tiddler-link-background: transparent
+tiddler-link-foreground: #3b6ea8
+tiddler-link-underline: none
+tiddler-subtitle-foreground: #a8a29a
+tiddler-title-foreground: #2b2924
+tiddler-title-background: rgba(255, 255, 255, 0.92)
+toolbar-new-button: #2f6a42
+toolbar-options-button: #7a736a
+toolbar-save-button: #2f6a42
+toolbar-info-button: #3b6ea8
+toolbar-edit-button: #3b6ea8
+toolbar-close-button: #7a736a
+toolbar-delete-button: #b5452f
+toolbar-cancel-button: #b5452f
+toolbar-done-button: #2f6a42
+untagged-background: #b5afa6
+very-muted-foreground: #a8a29a
+wikilist-background: #faf9f7
+wikilist-item: #ffffff
+wikilist-info: #37352f
+wikilist-title: #2b2924
+wikilist-title-svg: <<colour wikilist-title>>
+wikilist-url: #a8a29a
+wikilist-button-open: #2f6a42
+wikilist-button-open-hover: #255434
+wikilist-button-reveal: #3b6ea8
+wikilist-button-reveal-hover: #2c5580
+wikilist-button-remove: #b5452f
+wikilist-button-remove-hover: #953724
+wikilist-toolbar-background: #f1efea
+wikilist-toolbar-foreground: #7a736a
+wikilist-droplink-dragover: rgba(59, 110, 168, 0.10)
+wikilist-button-background: #ffffff
+wikilist-button-foreground: #37352f

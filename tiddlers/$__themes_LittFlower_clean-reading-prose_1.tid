@@ -1,0 +1,321 @@
+created: 20261103000000000
+creator: LittFlower
+modified: 20261103000000000
+modifier: LittFlower
+tags: $:/tags/Stylesheet
+title: $:/themes/LittFlower/clean-reading-prose
+type: text/vnd.tiddlywiki
+
+\rules except horizrule dash
+
+/*
+Clean Reading - prose
+Body text for rendered Markdown and plain WikiText. Editors are untouched.
+Leading is set for mixed Chinese and Latin text; headings lean on space
+rather than rules and colour.
+*/
+body.tc-body .tc-tiddler-body {
+  --lf-prose-font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC",
+    "Helvetica Neue", "Hiragino Sans GB", Arial, sans-serif;
+  --lf-prose-mono: "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
+
+  --lf-prose-size: 16.5px;
+  --lf-prose-leading: 1.8;
+  --lf-prose-measure: 46rem;
+  --lf-prose-gap: 1.05em;
+
+  --lf-ink-strong: #2b2924;
+  --lf-ink: #37352f;
+  --lf-muted: #7a736a;
+  --lf-faint: #a8a29a;
+  --lf-line: #ecebe7;
+  --lf-line-strong: #e3e0d9;
+  --lf-surface: #f7f6f3;
+  --lf-accent: #3b6ea8;
+
+  font-family: var(--lf-prose-font);
+  font-size: var(--lf-prose-size);
+  line-height: var(--lf-prose-leading);
+  color: var(--lf-ink);
+  max-width: var(--lf-prose-measure);
+  letter-spacing: 0.002em;
+  overflow-wrap: break-word;
+}
+
+body.tc-body .tc-tiddler-body .markdown {
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  color: inherit;
+  max-width: none;
+  background: transparent;
+  padding: 0;
+}
+
+/* ---------- block rhythm ---------- */
+
+body.tc-body .tc-tiddler-body p,
+body.tc-body .tc-tiddler-body ul,
+body.tc-body .tc-tiddler-body ol,
+body.tc-body .tc-tiddler-body blockquote,
+body.tc-body .tc-tiddler-body pre,
+body.tc-body .tc-tiddler-body table,
+body.tc-body .tc-tiddler-body figure {
+  margin: 0 0 var(--lf-prose-gap);
+}
+
+body.tc-body .tc-tiddler-body > :first-child,
+body.tc-body .tc-tiddler-body .markdown > :first-child {
+  margin-top: 0;
+}
+
+body.tc-body .tc-tiddler-body > :last-child,
+body.tc-body .tc-tiddler-body .markdown > :last-child {
+  margin-bottom: 0;
+}
+
+/* ---------- headings: space, not decoration ---------- */
+
+body.tc-body .tc-tiddler-body h1,
+body.tc-body .tc-tiddler-body h2,
+body.tc-body .tc-tiddler-body h3,
+body.tc-body .tc-tiddler-body h4,
+body.tc-body .tc-tiddler-body h5,
+body.tc-body .tc-tiddler-body h6 {
+  font-family: var(--lf-prose-font);
+  color: var(--lf-ink-strong);
+  line-height: 1.38;
+  letter-spacing: -0.008em;
+  border: none;
+  padding: 0;
+  margin: 1.9em 0 0.62em;
+}
+
+body.tc-body .tc-tiddler-body h1 { font-size: 1.52em; font-weight: 600; }
+body.tc-body .tc-tiddler-body h2 { font-size: 1.3em;  font-weight: 600; }
+body.tc-body .tc-tiddler-body h3 { font-size: 1.13em; font-weight: 600; }
+body.tc-body .tc-tiddler-body h4 { font-size: 1em;    font-weight: 600; }
+body.tc-body .tc-tiddler-body h5 { font-size: 0.94em; font-weight: 600; color: var(--lf-muted); }
+body.tc-body .tc-tiddler-body h6 {
+  font-size: 0.84em;
+  font-weight: 600;
+  color: var(--lf-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+body.tc-body .tc-tiddler-body h1:first-child,
+body.tc-body .tc-tiddler-body h2:first-child,
+body.tc-body .tc-tiddler-body h3:first-child,
+body.tc-body .tc-tiddler-body .markdown > h1:first-child,
+body.tc-body .tc-tiddler-body .markdown > h2:first-child {
+  margin-top: 0.2em;
+}
+
+/* ---------- inline ---------- */
+
+body.tc-body .tc-tiddler-body strong { font-weight: 600; color: var(--lf-ink-strong); }
+body.tc-body .tc-tiddler-body em { font-style: italic; }
+
+body.tc-body .tc-tiddler-body mark {
+  background: #fdf3cf;
+  color: inherit;
+  padding: 0.08em 0.22em;
+  border-radius: 3px;
+}
+
+body.tc-body .tc-tiddler-body kbd {
+  font-family: var(--lf-prose-mono);
+  font-size: 0.82em;
+  background: #ffffff;
+  border: 1px solid var(--lf-line-strong);
+  border-bottom-width: 2px;
+  border-radius: 5px;
+  padding: 0.1em 0.42em;
+  color: var(--lf-ink);
+}
+
+body.tc-body .tc-tiddler-body code,
+body.tc-body .tc-tiddler-body .markdown .inline-code,
+body.tc-body .tc-tiddler-body tt {
+  font-family: var(--lf-prose-mono);
+  font-size: 0.87em;
+  background: var(--lf-surface);
+  border: 1px solid var(--lf-line);
+  border-radius: 5px;
+  padding: 0.1em 0.36em;
+  color: #8a4b3c;
+}
+
+/* ---------- lists ---------- */
+
+body.tc-body .tc-tiddler-body ul,
+body.tc-body .tc-tiddler-body ol {
+  padding-left: 1.5em;
+}
+
+body.tc-body .tc-tiddler-body li {
+  margin: 0.26em 0;
+  line-height: var(--lf-prose-leading);
+  padding-left: 0.1em;
+}
+
+body.tc-body .tc-tiddler-body li > p {
+  margin-bottom: 0.4em;
+}
+
+body.tc-body .tc-tiddler-body li > ul,
+body.tc-body .tc-tiddler-body li > ol {
+  margin: 0.26em 0 0.3em;
+}
+
+body.tc-body .tc-tiddler-body ::marker {
+  color: var(--lf-faint);
+}
+
+body.tc-body .tc-tiddler-body .task-list-item {
+  list-style: none;
+  margin-left: -1.25em;
+}
+
+body.tc-body .tc-tiddler-body .task-list-item input {
+  margin-right: 0.55em;
+  accent-color: var(--lf-accent);
+  vertical-align: baseline;
+}
+
+/* ---------- quotes ---------- */
+
+body.tc-body .tc-tiddler-body blockquote {
+  border-left: 3px solid var(--lf-line-strong);
+  background: transparent;
+  color: var(--lf-muted);
+  padding: 0.1em 0 0.1em 1.1em;
+  margin-left: 0;
+  font-style: normal;
+}
+
+body.tc-body .tc-tiddler-body blockquote > :first-child { margin-top: 0; }
+body.tc-body .tc-tiddler-body blockquote > :last-child { margin-bottom: 0; }
+
+body.tc-body .tc-tiddler-body blockquote blockquote {
+  margin-top: 0.6em;
+}
+
+/* ---------- rules and media ---------- */
+
+body.tc-body .tc-tiddler-body hr {
+  border: none;
+  border-top: 1px solid var(--lf-line);
+  margin: 2.2em 0;
+}
+
+body.tc-body .tc-tiddler-body img,
+body.tc-body .tc-tiddler-body svg {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+}
+
+/* ---------- code blocks ---------- */
+
+body.tc-body .tc-tiddler-body pre {
+  background: var(--lf-surface);
+  border: 1px solid var(--lf-line);
+  border-radius: 8px;
+  padding: 14px 16px;
+  overflow-x: auto;
+  font-size: 0.86em;
+  line-height: 1.66;
+}
+
+body.tc-body .tc-tiddler-body pre code,
+body.tc-body .tc-tiddler-body pre tt,
+body.tc-body .tc-tiddler-body pre code.hljs {
+  background: transparent;
+  border: none;
+  padding: 0;
+  font-size: 1em;
+  color: var(--lf-ink);
+}
+
+/* highlight.js, muted to match the page */
+
+body.tc-body .tc-tiddler-body .hljs-comment,
+body.tc-body .tc-tiddler-body .hljs-quote { color: #a8a29a; font-style: italic; }
+body.tc-body .tc-tiddler-body .hljs-keyword,
+body.tc-body .tc-tiddler-body .hljs-selector-tag,
+body.tc-body .tc-tiddler-body .hljs-literal { color: #8a4b7a; }
+body.tc-body .tc-tiddler-body .hljs-string,
+body.tc-body .tc-tiddler-body .hljs-meta .hljs-string { color: #3f7a4a; }
+body.tc-body .tc-tiddler-body .hljs-number,
+body.tc-body .tc-tiddler-body .hljs-symbol,
+body.tc-body .tc-tiddler-body .hljs-bullet { color: #8a5a2a; }
+body.tc-body .tc-tiddler-body .hljs-title,
+body.tc-body .tc-tiddler-body .hljs-title.function_,
+body.tc-body .tc-tiddler-body .hljs-section { color: #3b6ea8; }
+body.tc-body .tc-tiddler-body .hljs-type,
+body.tc-body .tc-tiddler-body .hljs-built_in,
+body.tc-body .tc-tiddler-body .hljs-class { color: #2f6a6a; }
+body.tc-body .tc-tiddler-body .hljs-attr,
+body.tc-body .tc-tiddler-body .hljs-attribute,
+body.tc-body .tc-tiddler-body .hljs-variable.language_ { color: #8a6a2a; }
+body.tc-body .tc-tiddler-body .hljs-meta { color: var(--lf-faint); }
+body.tc-body .tc-tiddler-body .hljs-emphasis { font-style: italic; }
+body.tc-body .tc-tiddler-body .hljs-strong { font-weight: 600; }
+body.tc-body .tc-tiddler-body .hljs-addition { background: #eef7f0; color: #2f6a42; }
+body.tc-body .tc-tiddler-body .hljs-deletion { background: #fdf0ef; color: #8a3a33; }
+
+/* ---------- tables: hairlines only ---------- */
+
+body.tc-body .tc-tiddler-body table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 0.93em;
+  border: none;
+}
+
+body.tc-body .tc-tiddler-body th,
+body.tc-body .tc-tiddler-body td {
+  border: none;
+  border-bottom: 1px solid var(--lf-line);
+  padding: 8px 12px 8px 0;
+  text-align: left;
+  vertical-align: top;
+}
+
+body.tc-body .tc-tiddler-body th {
+  font-weight: 600;
+  color: var(--lf-muted);
+  font-size: 0.86em;
+  letter-spacing: 0.02em;
+  border-bottom: 1px solid var(--lf-line-strong);
+  background: transparent;
+}
+
+body.tc-body .tc-tiddler-body table tr:last-child td {
+  border-bottom: none;
+}
+
+body.tc-body .tc-tiddler-body table tr:hover td {
+  background: #faf9f7;
+}
+
+/* ---------- footnotes ---------- */
+
+body.tc-body .tc-tiddler-body .footnotes {
+  margin-top: 2.4em;
+  padding-top: 1.1em;
+  border-top: 1px solid var(--lf-line);
+  font-size: 0.88em;
+  color: var(--lf-muted);
+}
+
+/* ---------- narrow windows ---------- */
+
+@media screen and (max-width: 768px) {
+  body.tc-body .tc-tiddler-body {
+    --lf-prose-size: 16px;
+    --lf-prose-leading: 1.75;
+  }
+}
