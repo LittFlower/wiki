@@ -20,7 +20,7 @@ body.tc-body .tc-tiddler-body {
 
   --lf-prose-size: 15.5px;
   --lf-prose-leading: 1.8;
-  --lf-prose-measure: 43rem;
+  --lf-prose-measure: 56rem;
   --lf-prose-gap: 1.05em;
 
   --lf-ink-strong: #2b2924;

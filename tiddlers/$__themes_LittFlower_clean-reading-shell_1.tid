@@ -18,7 +18,7 @@ body.tc-body {
   --lf-ui-font: "JetBrains Mono", "PingFang SC", "Hiragino Sans GB", Menlo, monospace;
   --lf-mono-font: "JetBrains Mono", "PingFang SC", Menlo, Consolas, monospace;
 
-  --lf-measure: 43rem;
+  --lf-measure: 56rem;
   --lf-ui-size: 13.5px;
   --lf-ui-leading: 1.55;
 
@@ -396,11 +396,139 @@ body.tc-body .opened-tiddlers-bar-close-button:hover {
   opacity: 1;
 }
 
-/* ---------- editor ---------- */
+/* ---------- editor: CodeMirror 6 ---------- */
+
+/*
+Reading wants a measure; editing wants room. The edit frame is deliberately
+wider than the view frame instead of inheriting the reading column.
+*/
+body.tc-body .tc-tiddler-frame.tc-tiddler-edit-frame {
+  max-width: min(100%, 1040px);
+}
+
+/* a side-by-side preview needs noticeably more room than plain editing */
+body.tc-body .tc-tiddler-frame.tc-tiddler-edit-frame:has(.tc-tiddler-preview) {
+  max-width: min(100%, 1340px);
+}
+
+body.tc-body .tc-tiddler-edit-frame .cm-editor {
+  background: var(--lf-paper);
+  border: 1px solid var(--lf-line);
+  border-radius: var(--lf-radius-sm);
+  overflow: hidden;
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+
+body.tc-body .tc-tiddler-edit-frame .cm-editor:hover {
+  border-color: var(--lf-line-strong);
+}
+
+body.tc-body .tc-tiddler-edit-frame .cm-editor.cm-focused {
+  outline: none;
+  border-color: var(--lf-accent);
+  box-shadow: 0 0 0 3px rgba(59, 110, 168, 0.10);
+}
+
+body.tc-body .tc-tiddler-edit-frame .cm-scroller {
+  font-family: var(--lf-mono-font);
+  font-size: 15px;
+  line-height: 1.78;
+  color: var(--lf-ink);
+}
+
+body.tc-body .tc-tiddler-edit-frame .cm-content {
+  padding: 14px 4px 14px 0;
+  caret-color: var(--lf-accent);
+}
+
+body.tc-body .tc-tiddler-edit-frame .cm-line {
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+body.tc-body .tc-tiddler-edit-frame .cm-gutters {
+  background: #faf9f7;
+  border-right: 1px solid var(--lf-line);
+  color: #c4bfb6;
+  font-size: 0.82em;
+}
+
+body.tc-body .tc-tiddler-edit-frame .cm-lineNumbers .cm-gutterElement {
+  padding: 0 8px 0 12px;
+  min-width: 2.2em;
+}
+
+body.tc-body .tc-tiddler-edit-frame .cm-activeLine {
+  background: rgba(59, 110, 168, 0.045);
+}
+
+body.tc-body .tc-tiddler-edit-frame .cm-activeLineGutter {
+  background: rgba(59, 110, 168, 0.06);
+  color: var(--lf-muted);
+}
+
+body.tc-body .tc-tiddler-edit-frame .cm-cursor,
+body.tc-body .tc-tiddler-edit-frame .cm-dropCursor {
+  border-left-color: var(--lf-accent);
+}
+
+body.tc-body .tc-tiddler-edit-frame .cm-selectionBackground,
+body.tc-body .tc-tiddler-edit-frame .cm-content ::selection {
+  background: #d6e4f2;
+}
+
+body.tc-body .tc-tiddler-edit-frame .cm-placeholder {
+  color: var(--lf-faint);
+  font-style: normal;
+}
+
+body.tc-body .tc-tiddler-edit-frame .cm-panels {
+  background: #faf9f7;
+  border-color: var(--lf-line);
+  color: var(--lf-ink);
+}
+
+body.tc-body .tc-tiddler-edit-frame .cm-tooltip,
+body.tc-body .tc-tiddler-edit-frame .cm-tooltip-autocomplete {
+  background: var(--lf-paper);
+  border: 1px solid var(--lf-line-strong);
+  border-radius: var(--lf-radius-sm);
+  box-shadow: 0 1px 2px rgba(32, 30, 27, 0.04), 0 10px 28px rgba(32, 30, 27, 0.08);
+  font-family: var(--lf-mono-font);
+  font-size: 0.86em;
+}
+
+body.tc-body .tc-tiddler-edit-frame .cm-tooltip-autocomplete > ul > li[aria-selected] {
+  background: var(--lf-accent-soft);
+  color: var(--lf-ink-strong);
+}
+
+/* the draft title row */
+
+body.tc-body .tc-tiddler-edit-frame input.tc-titlebar,
+body.tc-body .tc-tiddler-edit-frame .tc-titlebar input {
+  font-family: var(--lf-ui-font);
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: var(--lf-ink-strong);
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--lf-line);
+  border-radius: 0;
+  padding: 2px 0 8px;
+  margin-bottom: 10px;
+}
+
+body.tc-body .tc-tiddler-edit-frame input.tc-titlebar:focus,
+body.tc-body .tc-tiddler-edit-frame .tc-titlebar input:focus {
+  outline: none;
+  border-bottom-color: var(--lf-accent);
+}
+
+/* plain textarea fallback, used by field editors and non-CM6 types */
 
 body.tc-body .tc-tiddler-edit-frame textarea.tc-edit-texteditor,
-body.tc-body .tc-tiddler-edit-frame input.tc-edit-texteditor,
-body.tc-body .tc-tiddler-frame .CodeMirror {
+body.tc-body .tc-tiddler-edit-frame input.tc-edit-texteditor {
   background: var(--lf-paper);
   border: 1px solid var(--lf-line);
   border-radius: var(--lf-radius-sm);
@@ -412,14 +540,56 @@ body.tc-body .tc-tiddler-frame .CodeMirror {
   transition: border-color 120ms ease, box-shadow 120ms ease;
 }
 
-body.tc-body .tc-tiddler-edit-frame textarea.tc-edit-texteditor:hover {
-  border-color: var(--lf-line-strong);
-}
-
 body.tc-body .tc-tiddler-edit-frame textarea.tc-edit-texteditor:focus {
   outline: none;
   border-color: var(--lf-accent);
   box-shadow: 0 0 0 3px rgba(59, 110, 168, 0.10);
+}
+
+/* side-by-side live preview
+
+The preview wrapper holds the toolbar, the editor and the rendered pane in ONE
+flex container, so the toolbar gets a full-width row of its own and the other
+two share the row beneath it. The editor side is .tc-edit-texteditor, a div
+wrapping .cm-editor, not a pane class of its own.
+*/
+body.tc-body .tc-tiddler-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 22px;
+  align-items: flex-start;
+}
+
+body.tc-body .tc-tiddler-preview > .tc-editor-toolbar {
+  flex: 0 0 100%;
+  width: 100%;
+}
+
+body.tc-body .tc-tiddler-preview > .tc-edit-texteditor,
+body.tc-body .tc-tiddler-preview > .tc-tiddler-preview-preview {
+  flex: 1 1 0;
+  min-width: 0;
+  width: auto;
+  float: none;
+}
+
+body.tc-body .tc-tiddler-preview > .tc-tiddler-preview-preview {
+  background: #faf9f7;
+  border: 1px solid var(--lf-line);
+  border-radius: var(--lf-radius-sm);
+  padding: 14px 18px;
+  max-height: 72vh;
+  overflow-y: auto;
+}
+
+@media (max-width: 1100px) {
+  body.tc-body .tc-tiddler-preview > .tc-edit-texteditor,
+  body.tc-body .tc-tiddler-preview > .tc-tiddler-preview-preview {
+    flex: 1 1 100%;
+  }
+  body.tc-body .tc-tiddler-preview > .tc-tiddler-preview-preview {
+    max-height: 42vh;
+  }
 }
 
 body.tc-body .tc-editor-toolbar {
