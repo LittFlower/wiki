@@ -1,0 +1,17 @@
+title: Knowledge graph
+tags: demo
+type: text/vnd.tiddlywiki
+
+! 知识图谱索引
+
+这个 demo 把 wiki 当成一个有向带权图：
+
+* 节点：非系统 tiddler；
+* 显式边：`[[Target]]`、`[[text|Target]]`、`<$link to="Target">`，权重 1.0；
+* 隐式边：标签、transclusion，权重分别为 0.5 和 0.75；
+* 反向索引：`backlinkMap[target][source] = weight`；
+* 词项倒排：`termInvertedIndex[term][title] = tf`。
+
+查询路径：[[TiddlyWiki]] / [[中文分词 Demo]]。
+
+也可以查看 [[Demo - Graph Panel]] 里的实时面板。

@@ -5,7 +5,10 @@
     "buildonline": "node -e \"require('./scripts/build').buildOnlineHTML('public-dist', 'index.html');\"",
     "buildoffline": "node -e \"require('./scripts/build').buildOfflineHTML('public-dist', 'offline.html');\"",
     "buildlibrary": "node -e \"require('./scripts/build').buildLibrary('[prefix[$:/]!prefix[$:/plugins/tiddlywiki/]!prefix[$:/themes/tiddlywiki/]!prefix[$:/languages/]!tag[$:/tags/PluginLibrary]!prefix[$:/plugins/kookma]]', 'public-dist/library');\"",
-    "clean": "rimraf public-dist"
+    "clean": "rimraf public-dist",
+    "test:graph": "node --test tests/headless-graph-prerender.test.js",
+    "demo:graph": "node demo/headless-graph-prerender/run-demo.js",
+    "build:graph-demo": "cross-env TIDDLYWIKI_PLUGIN_PATH=./plugins npx tiddlywiki demo/headless-graph-prerender/wiki --output demo/headless-graph-prerender/dist --build index"
   },
   "devDependencies": {
     "cross-env": "7.0.3",

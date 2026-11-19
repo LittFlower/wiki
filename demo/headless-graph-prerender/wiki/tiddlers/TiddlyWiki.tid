@@ -1,0 +1,14 @@
+title: TiddlyWiki
+tags: demo
+type: text/vnd.tiddlywiki
+
+! TiddlyWiki
+
+TiddlyWiki 是一个单文件 wiki。这个演示插件利用它的 Node 启动流程：
+
+* `$tw.fakeDocument` 让构建期渲染不依赖浏览器 DOM；
+* `$tw.wiki.parseTiddler()` 提供 parse tree；
+* `wiki.addEventListener("change")` 提供增量更新的入口；
+* filter operator 模块通过 `$tw.modules.applyMethods("filteroperator")` 注册。
+
+返回 [[Knowledge graph]]，或者看 [[Demo - Prerender]]。

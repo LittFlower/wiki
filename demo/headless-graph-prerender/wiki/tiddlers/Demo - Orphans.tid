@@ -1,0 +1,13 @@
+title: Demo - Orphans
+tags: demo
+type: text/vnd.tiddlywiki
+
+! 孤岛节点
+
+下面的面板用 `mode="orphans"` 渲染。孤岛节点是入度和出度都为 0 的条目；这个视图只读，不会删除任何内容。
+
+<$backlink-panel mode="orphans" limit="10"/>
+
+刻意留下的未连接条目：`未连接笔记 A`、`未连接笔记 B`（这里故意不写 wikilink，否则它们就有入链了）。
+
+回到 [[Demo - Home]]。

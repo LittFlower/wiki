@@ -1,0 +1,23 @@
+title: Demo - Filters
+tags: demo
+type: text/vnd.tiddlywiki
+
+! Filter 操作符
+
+这些操作符直接查内存 Map，不做全库正则扫描。
+
+|!操作符 |!作用 |
+|`[hg-backlinks[0.5]]` |显式 + 隐式入链，权重 >= 0.5 |
+|`[hg-related[10]]` |TF-IDF + 标签共现的 Top-N 潜在关联 |
+|`[hg-orphans[]]` |入度和出度都为 0 |
+|`[hg-path[Target]]` |最短关联路径，默认深度 4 |
+
+试试从当前条目出发：
+
+```
+<$list filter="[hg-backlinks[0.5]]"><$link/><br/></$list>
+```
+
+返回的条目包含显式 wikilink（权重 1.0）、transclusion（0.75）和标签入链（0.5）。潜在关联会排除直接相邻的条目，避免和入链列表重复。
+
+相关页面：[[Demo - Home]]、[[Demo - Graph Panel]]、[[Knowledge graph]]。

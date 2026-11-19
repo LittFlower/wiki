@@ -1,0 +1,11 @@
+title: Demo - Graph Panel
+tags: demo
+type: text/vnd.tiddlywiki
+
+! 关联面板
+
+下面这个面板由 `<$backlink-panel>` 渲染。它读取同一份内存图索引，索引刷新时只重绘自己的 DOM 节点。
+
+<$backlink-panel tiddler="Demo - Home" limit="8"/>
+
+这个条目本身链接回 [[Demo - Home]]，也链接到 [[Knowledge graph]] 和 [[TiddlyWiki]]，所以它应该出现在 Demo - Home 的入链列表里。

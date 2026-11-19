@@ -1,0 +1,14 @@
+{
+  "description": "headless-graph-prerender demo wiki",
+  "plugins": ["headless-graph-prerender"],
+  "themes": ["tiddlywiki/vanilla"],
+  "languages": [],
+  "build": {
+    "index": [
+      "--rendertiddler",
+      "$:/core/save/all",
+      "index.html",
+      "text/plain"
+    ]
+  }
+}

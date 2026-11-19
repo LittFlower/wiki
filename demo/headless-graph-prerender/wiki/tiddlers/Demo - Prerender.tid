@@ -1,0 +1,21 @@
+title: Demo - Prerender
+tags: demo
+type: text/vnd.tiddlywiki
+
+! 构建期预渲染
+
+在 Node 下执行：
+
+```
+TIDDLYWIKI_PLUGIN_PATH=./plugins npx tiddlywiki demo/headless-graph-prerender/wiki --prerender-graph
+```
+
+命令会：
+
+# 用 `$tw.wiki.getTiddlers()` 取出非系统条目；
+# 对每个条目调用 `$tw.wiki.parseTiddler()`，从 parse tree 提取静态 link / transclude；
+# 构建 `forwardMap`、`backlinkMap` 和词项倒排索引；
+# 把 `graph.json`、`terms.json`、`summary` 以及每个条目的 HTML 片段写入 `$:/temp/static-index/`；
+# 打印节点数、边数、词项数、片段数和耗时。
+
+这个演示不保证 1,000+ 条目的 1.5s 预算，实际数字以 `npm run demo:graph` 的输出为准。相关条目见 [[Knowledge graph]] 和 [[Demo - Filters]]。

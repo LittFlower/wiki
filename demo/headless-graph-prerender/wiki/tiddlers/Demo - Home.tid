@@ -1,0 +1,17 @@
+title: Demo - Home
+tags: demo
+type: text/vnd.tiddlywiki
+
+! Headless Graph Prerender Demo
+
+这是一个演示分支，把 `$:/plugins/littflower/headless-graph-prerender` 挂在一个很小的 wiki 上。
+
+* [[Demo - Graph Panel]]
+* [[Demo - Prerender]]
+* [[Demo - Filters]]
+* [[Demo - Orphans]]
+* [[Knowledge graph]]
+* [[TiddlyWiki]]
+* [[中文分词 Demo]]
+
+The graph index sees the static links on this page, so this tiddler is a good place to inspect backlinks and related notes.

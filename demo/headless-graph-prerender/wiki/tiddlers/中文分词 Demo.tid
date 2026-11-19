@@ -1,0 +1,11 @@
+title: 中文分词 Demo
+tags: demo
+type: text/vnd.tiddlywiki
+
+! 中文二元组分词
+
+英文用空格切词，中文没有空格。原型采用最便宜的方案：连续 CJK 字符切成二元组（bigram）。
+
+例如“知识图谱索引”会得到“知识”“识图”“图谱”“谱索”“索引”这些词项。它不需要词典，冷启动很快，但会有一些噪声。
+
+相关页面：[[Knowledge graph]]、[[TiddlyWiki]]、[[Demo - Filters]]。

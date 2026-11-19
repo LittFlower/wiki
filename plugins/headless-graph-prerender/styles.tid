@@ -1,0 +1,72 @@
+title: $:/plugins/littflower/headless-graph-prerender/styles
+type: text/vnd.tiddlywiki
+tags: [[$:/tags/Stylesheet]]
+
+.hg-backlink-panel {
+  margin: 1em 0;
+  padding: 0.75em 1em;
+  border: 1px solid rgba(128, 128, 128, 0.35);
+  border-radius: 6px;
+  font-size: 0.9em;
+}
+
+.hg-panel-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75em;
+  font-weight: 600;
+  margin-bottom: 0.5em;
+}
+
+.hg-count {
+  font-weight: 400;
+  opacity: 0.65;
+  font-size: 0.85em;
+}
+
+.hg-section {
+  margin-top: 0.5em;
+}
+
+.hg-section-title {
+  font-weight: 600;
+  opacity: 0.8;
+  margin: 0.35em 0 0.2em;
+}
+
+.hg-list {
+  margin: 0;
+  padding-left: 1.2em;
+}
+
+.hg-list li {
+  margin: 0.1em 0;
+}
+
+.hg-link {
+  text-decoration: none;
+}
+
+.hg-weight {
+  margin-left: 0.4em;
+  opacity: 0.5;
+  font-variant-numeric: tabular-nums;
+  font-size: 0.85em;
+}
+
+.hg-empty,
+.hg-hint,
+.hg-more {
+  opacity: 0.6;
+  margin: 0.2em 0;
+}
+
+.hg-tag {
+  display: inline-block;
+  padding: 0 0.35em;
+  border: 1px solid rgba(128, 128, 128, 0.35);
+  border-radius: 3px;
+  margin-right: 0.2em;
+  font-size: 0.85em;
+}
